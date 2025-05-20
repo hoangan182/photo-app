@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "190163969141",
+    "project_id": "photo-library-app-6ca53",
+    "storage_bucket": "photo-library-app-6ca53.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:190163969141:android:a7cee051fc314a34ecc43c",
+        "android_client_info": {
+          "package_name": "com.example.photobooth"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArlxFg-KFKJupI96XMN_XEFsTFq5g8vto"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:190163969141:android:d7e0fce7296471e4ecc43c",
+        "android_client_info": {
+          "package_name": "com.example.photoboothlogin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArlxFg-KFKJupI96XMN_XEFsTFq5g8vto"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

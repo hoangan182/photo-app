@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#E7E0FF"
+    android:orientation="vertical"
+    tools:context=".HomeActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="12dp"
+            android:layout_height="62dp"
+            android:layout_marginLeft="20dp"
+            android:layout_weight="1"
+            app:srcCompat="@drawable/logo" />
+
+        <TextView
+            android:id="@+id/textView9"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="PHOTOBOOTH"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/imageButton"
+            android:layout_width="wrap_content"
+            android:layout_height="55dp"
+            android:layout_weight="1"
+            android:backgroundTint="#E7E0FF"
+            app:srcCompat="@drawable/baseline_add_circle_outline_24" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <Button
+            android:id="@+id/btnSearch"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:backgroundTint="#ffffff"
+            android:drawableLeft="@drawable/baseline_search_24"
+            android:gravity="center|start"
+            android:text="Tìm kiếm"
+            android:textColor="#433E3E"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/textView10"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:text="Đề xuất"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/txtVideo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/play_button"
+            android:drawablePadding="20dp"
+            android:layout_marginTop="15dp"
+            android:ems="10"
+            android:text="Video"
+            android:textColor="#474545"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/txtSelfies"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/selfie"
+            android:layout_marginTop="10dp"
+            android:drawablePadding="20dp"
+            android:ems="10"
+            android:text="Selfies"
+            android:textColor="#504E4E"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/txtDocument"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/document"
+            android:layout_marginTop="10dp"
+            android:drawablePadding="20dp"
+            android:ems="10"
+            android:text="Document"
+            android:textColor="#685F5F"
+            android:textSize="18sp" />
+
+
+        <TextView
+            android:id="@+id/txtFavorite"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/favorite"
+            android:layout_marginTop="10dp"
+            android:drawablePadding="20dp"
+            android:ems="10"
+            android:text="Ảnh yêu thích"
+            android:textColor="#685F5F"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/txtRecentlyAdded"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/clock"
+            android:layout_marginTop="10dp"
+            android:drawablePadding="20dp"
+            android:ems="10"
+            android:text="Mới thêm gần đây"
+            android:textColor="#685F5F"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+</LinearLayout>
