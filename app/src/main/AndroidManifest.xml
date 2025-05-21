@@ -28,7 +28,7 @@
             android:name=".activity.TrashActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.StartActivity"
+            android:name=".activity.HomeActivity"
             android:exported="false" />
         <activity
             android:name=".activity.AllPhotoActivity"
@@ -37,7 +37,7 @@
             android:name=".activity.LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.HomeActivity"
+            android:name=".activity.StartActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
