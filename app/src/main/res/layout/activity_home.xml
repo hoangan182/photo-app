@@ -77,9 +77,9 @@
             android:layout_height="70dp"
             android:layout_marginTop="10dp"
             android:backgroundTint="#ffffff"
-            android:drawableLeft="@drawable/baseline_screenshot_24"
+            android:drawableLeft="@drawable/baseline_auto_awesome_motion_24"
             android:gravity="center|start"
-            android:text="Ảnh chụp màn hình"
+            android:text="Abum"
             android:textColor="#433E3E"
             android:textSize="16sp" />
 
