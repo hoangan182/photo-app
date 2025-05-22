@@ -11,7 +11,7 @@
     android:paddingTop="60dp"
     android:paddingRight="20dp"
     android:paddingBottom="50dp"
-    tools:context=".SignUpActivity">
+    tools:context=".activity.SignUpActivity">
 
     <TextView
         android:id="@+id/textView"
@@ -125,18 +125,28 @@
 
     <Button
         android:id="@+id/btnSignUp"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Đăng ký"
         android:layout_marginTop="20dp"
+        android:background="@drawable/rounded_button"
+        android:backgroundTint="?attr/colorPrimary"
+        android:text="Đăng ký"
+        android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editRetypePassword"
-        android:backgroundTint="?attr/colorPrimary"
-        android:textColor="@android:color/white"
-        android:background="@drawable/rounded_button"
-        />
+        app:layout_constraintTop_toBottomOf="@+id/editRetypePassword" />
 
+    <TextView
+        android:id="@+id/txtLogin1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Bạn đã có tài khoản? Đăng nhập ngay"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnSignUp"
+        app:layout_constraintVertical_bias="0.108"
+        tools:text="Bạn đã có tài khoản? Đăng nhập ngay" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,10 +1,8 @@
-package com.example.photobooth;
+package com.example.photobooth.activity;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,38 +10,36 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-public class StartActivity extends AppCompatActivity {
+import com.example.photobooth.R;
 
-    Button startButton;
-    TextView signInTextView;
+public class ChangePasswordActivity extends AppCompatActivity {
+
+    Button btnSavePassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.start_activity);
+        setContentView(R.layout.activity_change_password);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        startButton = findViewById(R.id.btnLogin);
-        signInTextView = findViewById(R.id.txtSignIn);
+        btnSavePassword = findViewById(R.id.btnSavePassword);
 
-        startButton.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.txtBackChangePassword).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(StartActivity.this, LoginActivity.class);
-                startActivity(intent);
+            public void onClick(View view) {
+                finish();
             }
         });
 
-        signInTextView.setOnClickListener(new View.OnClickListener() {
+        btnSavePassword.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(StartActivity.this, LoginActivity.class);
-                startActivity(intent);
+            public void onClick(View view) {
+                finish();
             }
         });
     }
