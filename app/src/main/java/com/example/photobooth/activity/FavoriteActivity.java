@@ -20,31 +20,31 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class AllPhotoActivity extends AppCompatActivity {
+public class FavoriteActivity extends AppCompatActivity {
 
     private List<String> imageUrls = new ArrayList<>();
 
-    GridView gridViewAll;
-    ConstraintLayout noAllImageLayout;
+    GridView gridViewFavorite;
+    ConstraintLayout noFavoriteImageLayout;
 
-    TextView txtBackAllPhoto;
+    TextView txtBackFavorite;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_all_photo);
+        setContentView(R.layout.activity_favorite);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        gridViewAll = findViewById(R.id.gridViewAll);
-        noAllImageLayout = findViewById(R.id.noAllImageLayout);
-        txtBackAllPhoto = findViewById(R.id.txtBackChangePassword);
+        gridViewFavorite = findViewById(R.id.gridViewFavorite);
+        noFavoriteImageLayout = findViewById(R.id.noFavoriteImageLayout);
+        txtBackFavorite = findViewById(R.id.txtBackAddAlbum);
 
-        txtBackAllPhoto.setOnClickListener(new View.OnClickListener() {
+        txtBackFavorite.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
@@ -57,7 +57,6 @@ public class AllPhotoActivity extends AppCompatActivity {
                 "https://vcdn1-dulich.vnecdn.net/2021/07/16/1-1626437591.jpg?w=460&h=0&q=100&dpr=1&fit=crop&s=wkxNSU_JeGofMu90v5u03g",
                 "https://nads.1cdn.vn/2024/11/22/74da3f39-759b-4f08-8850-4c8f2937e81a-1_mangeshdes.png",
                 "https://hoanghamobile.com/tin-tuc/wp-content/uploads/2024/11/tai-hinh-nen-dep-mien-phi.jpg",
-                "https://res.cloudinary.com/dhhr73s2r/image/upload/v1747918246/pgr4u57ztf0vrk4pbhum.jpg",
                 "https://d1hjkbq40fs2x4.cloudfront.net/2017-08-21/files/landscape-photography_1645.jpg",
                 "https://cdnphoto.dantri.com.vn/aerztjLQz4WGhQnIqEocC_FLsLw=/thumb_w/960/2020/03/03/thanhbinh-1-a-3-docx-1583197236967.jpeg",
                 "https://naidecor.vn/wp-content/uploads/2023/09/landscape_photography_tips_featured_image_1024x1024.webp",
@@ -80,20 +79,20 @@ public class AllPhotoActivity extends AppCompatActivity {
                 "https://cdnphoto.dantri.com.vn/aerztjLQz4WGhQnIqEocC_FLsLw=/thumb_w/960/2020/03/03/thanhbinh-1-a-3-docx-1583197236967.jpeg",
                 "https://naidecor.vn/wp-content/uploads/2023/09/landscape_photography_tips_featured_image_1024x1024.webp",
                 "https://d1hjkbq40fs2x4.cloudfront.net/2016-01-31/files/1045-2.jpg"
-        );
+                );
 
         if (imageUrls.isEmpty()) {
-            noAllImageLayout.setVisibility(View.VISIBLE);
-            gridViewAll.setVisibility(View.GONE);
+            noFavoriteImageLayout.setVisibility(View.VISIBLE);
+            gridViewFavorite.setVisibility(View.GONE);
         } else {
-            noAllImageLayout.setVisibility(View.GONE);
-            gridViewAll.setVisibility(View.VISIBLE);
+            noFavoriteImageLayout.setVisibility(View.GONE);
+            gridViewFavorite.setVisibility(View.VISIBLE);
         }
 
         ImageAdapter adapter = new ImageAdapter(this, imageUrls);
-        gridViewAll.setAdapter(adapter);
+        gridViewFavorite.setAdapter(adapter);
 
-        gridViewAll.setOnItemClickListener((parent, view, position, id) -> {
+        gridViewFavorite.setOnItemClickListener((parent, view, position, id) -> {
             Intent intent = new Intent(this, FullScreenImageActivity.class);
             intent.putExtra("image_url", imageUrls.get(position));
             startActivity(intent);

@@ -33,7 +33,7 @@
             android:textStyle="bold" />
 
         <ImageButton
-            android:id="@+id/imageButton"
+            android:id="@+id/btnAddAlbum"
             android:layout_width="wrap_content"
             android:layout_height="55dp"
             android:layout_weight="1"
@@ -79,7 +79,7 @@
             android:backgroundTint="#ffffff"
             android:drawableLeft="@drawable/baseline_auto_awesome_motion_24"
             android:gravity="center|start"
-            android:text="Abum"
+            android:text="Album"
             android:textColor="#433E3E"
             android:textSize="16sp" />
 

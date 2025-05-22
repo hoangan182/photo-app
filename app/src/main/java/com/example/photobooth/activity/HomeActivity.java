@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,6 +16,8 @@ import com.example.photobooth.R;
 
 public class HomeActivity extends AppCompatActivity {
     Button favoriteButton, trashButton, allPhotoButton;
+
+    ImageView btnAddAlbum;
 
 
     @Override
@@ -30,11 +33,12 @@ public class HomeActivity extends AppCompatActivity {
         favoriteButton = findViewById(R.id.btnfavorite);
         trashButton = findViewById(R.id.btntrash);
         allPhotoButton = findViewById(R.id.btnAllPhoto);
+        btnAddAlbum = findViewById(R.id.btnAddAlbum);
 
         favoriteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(HomeActivity.this,FavoritActivity.class);
+                Intent intent = new Intent(HomeActivity.this, FavoriteActivity.class);
                 startActivity(intent);
             }
         });
@@ -48,7 +52,15 @@ public class HomeActivity extends AppCompatActivity {
         allPhotoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(HomeActivity.this, AllPhotoActivity.class);
+                Intent intent = new Intent(HomeActivity.this,AllPhotoActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnAddAlbum.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(HomeActivity.this, AddAlbumActivity.class);
                 startActivity(intent);
             }
         });
