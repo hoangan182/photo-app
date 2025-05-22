@@ -67,32 +67,23 @@ public class LoginActivity extends AppCompatActivity {
             String email = editUsername.getText().toString().trim();
             String password = editPassword.getText().toString().trim();
 
-//            if (email.isEmpty() || password.isEmpty()) {
-//                Toast.makeText(LoginActivity.this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
-//                return;
-//            }
+            if (email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(LoginActivity.this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-            mAuth.signInWithEmailAndPassword("huogthu5521@gmail.com", "123456")
+            mAuth.signInWithEmailAndPassword(email, password)
                     .addOnSuccessListener(authResult -> {
-                     // Chuyển sang màn chính (HomeActivity chẳng hạn)
-//                            Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-//                            startActivity(intent);
-//                            finish();
-
                         FirebaseUser firebaseUser = authResult.getUser();
                         if (firebaseUser == null) {
                             Toast.makeText(LoginActivity.this, "Lỗi không xác định", Toast.LENGTH_SHORT).show();
                             return;
                         }
 
-                        String userId = firebaseUser.getUid();
-                        Log.e("heheheheheheheheheh", userId);
-                        // Lấy thông tin user từ Firestore
-                        userController.getUserById(userId,
+                        // ✅ Sửa: Lấy user từ Firestore theo email (không dùng UID nữa)
+                        userController.getUserByEmail(email,
                                 user -> {
                                     Toast.makeText(LoginActivity.this, "Đăng nhập thành công! Chào " + user.getUsername(), Toast.LENGTH_SHORT).show();
-
-                                    // Chuyển sang màn chính (HomeActivity chẳng hạn)
                                     Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                                     startActivity(intent);
                                     finish();

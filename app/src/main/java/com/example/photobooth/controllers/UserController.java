@@ -4,6 +4,8 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.google.firebase.auth.FirebaseUser;
+
 import com.example.photobooth.models.User;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -78,4 +80,36 @@ public class UserController {
                 ? FirebaseAuth.getInstance().getCurrentUser().getUid()
                 : null;
     }
+
+    public void getCurrentUserFromFirestore(OnSuccessListener<User> onSuccess, OnFailureListener onFailure) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            String email = currentUser.getEmail();
+            if (email != null) {
+                getUserByEmail(email, onSuccess, onFailure);
+            } else {
+                onFailure.onFailure(new Exception("Email người dùng là null"));
+            }
+        } else {
+            onFailure.onFailure(new Exception("Người dùng chưa đăng nhập"));
+        }
+    }
+
+
+    public void getUserByEmail(String email, OnSuccessListener<User> onSuccess, OnFailureListener onFailure) {
+        db.collection("users")
+                .whereEqualTo("email", email)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (!querySnapshot.isEmpty()) {
+                        User user = querySnapshot.getDocuments().get(0).toObject(User.class);
+                        onSuccess.onSuccess(user);
+                    } else {
+                        onFailure.onFailure(new Exception("Không tìm thấy người dùng với email: " + email));
+                    }
+                })
+                .addOnFailureListener(onFailure);
+    }
+
 }
