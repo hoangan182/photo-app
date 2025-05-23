@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bottom_sheet_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#E7E0FF">
+
+    <TextView
+        android:id="@+id/optionAddImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/add_image"
+        android:drawablePadding="8dp"
+        android:padding="16dp"
+        android:text="Thêm ảnh"
+        android:textColor="@android:color/black"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/optionAddAlbum"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/add_album_24"
+        android:drawablePadding="8dp"
+        android:padding="16dp"
+        android:text="Thêm Album"
+        android:textSize="16sp"
+        android:textColor="@android:color/black" />
+</LinearLayout>

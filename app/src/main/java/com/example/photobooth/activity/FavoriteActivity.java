@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -15,6 +16,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.photobooth.R;
 import com.example.photobooth.adapter.ImageAdapter;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +28,8 @@ public class FavoriteActivity extends AppCompatActivity {
 
     GridView gridViewFavorite;
     ConstraintLayout noFavoriteImageLayout;
+
+    ImageView imgShowOption;
 
     TextView txtBackFavorite;
 
@@ -43,6 +47,14 @@ public class FavoriteActivity extends AppCompatActivity {
         gridViewFavorite = findViewById(R.id.gridViewFavorite);
         noFavoriteImageLayout = findViewById(R.id.noFavoriteImageLayout);
         txtBackFavorite = findViewById(R.id.txtBackAddAlbum);
+        imgShowOption = findViewById(R.id.imgShowOptionFavorite);
+
+        imgShowOption.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showAddOptions();
+            }
+        });
 
         txtBackFavorite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -99,5 +111,28 @@ public class FavoriteActivity extends AppCompatActivity {
         });
 
 
+    }
+
+    private void showAddOptions() {
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+        View view = getLayoutInflater().inflate(R.layout.bottom_sheet_add_options, null);
+        bottomSheetDialog.setContentView(view);
+
+        TextView createSubject = view.findViewById(R.id.optionAddImage);
+        TextView createFolder = view.findViewById(R.id.optionAddAlbum);
+
+//        createSubject.setOnClickListener(v -> {
+//            bottomSheetDialog.dismiss();
+//            Intent intent = new Intent(this, CreateCourseActivity.class);
+//            startActivity(intent);
+//        });
+//
+//        createFolder.setOnClickListener(v -> {
+//            bottomSheetDialog.dismiss();
+//            Intent intent = new Intent(this, CreateFolderActivity.class);
+//            startActivity(intent);
+//        });
+
+        bottomSheetDialog.show();
     }
 }
