@@ -2,9 +2,12 @@ package com.example.photobooth.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,10 +23,13 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class LoginActivity extends AppCompatActivity {
+    boolean isPasswordVisible = false;
 
     private EditText editUsername, editPassword;
     private Button btnLogin;
     private TextView signInTextView;
+
+    ImageView imgShowPassword;
 
     private FirebaseAuth mAuth;
     private UserController userController;
@@ -54,6 +60,27 @@ public class LoginActivity extends AppCompatActivity {
         editPassword = findViewById(R.id.editPassword);
         btnLogin = findViewById(R.id.btnLogin);
         signInTextView = findViewById(R.id.txtSignIn);
+        imgShowPassword = findViewById(R.id.imgShowPassword);
+
+        imgShowPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isPasswordVisible) {
+                    // Ẩn mật khẩu
+                    editPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    imgShowPassword.setImageResource(R.drawable.show_password);
+                } else {
+                    // Hiện mật khẩu
+                    editPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                    imgShowPassword.setImageResource(R.drawable.hide_password);
+                }
+                isPasswordVisible = !isPasswordVisible;
+                editPassword.setSelection(editPassword.getText().length());
+            }
+        });
+
+
+
 
         // Mở màn đăng ký khi chưa có tài khoản
         signInTextView.setOnClickListener(view -> {
@@ -92,7 +119,7 @@ public class LoginActivity extends AppCompatActivity {
                                     Toast.makeText(LoginActivity.this, "Đăng nhập thành công! Chào " + user.getUsername(), Toast.LENGTH_SHORT).show();
 
                                     // Chuyển sang màn chính (HomeActivity chẳng hạn)
-                                    Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                     startActivity(intent);
                                     finish();
                                 },
