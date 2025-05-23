@@ -6,9 +6,9 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -67,7 +67,7 @@ public class LoginActivity extends AppCompatActivity {
             String password = editPassword.getText().toString().trim();
 
             if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(LoginActivity.this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                showDialog("Thiếu thông tin", "Vui lòng nhập đầy đủ thông tin");
                 return;
             }
 
@@ -75,27 +75,56 @@ public class LoginActivity extends AppCompatActivity {
                     .addOnSuccessListener(authResult -> {
                         FirebaseUser firebaseUser = authResult.getUser();
                         if (firebaseUser == null) {
-                            Toast.makeText(LoginActivity.this, "Lỗi không xác định", Toast.LENGTH_SHORT).show();
+                            showDialog("Lỗi", "Lỗi không xác định");
                             return;
                         }
 
-                        // ✅ Sửa: Lấy user từ Firestore theo email (không dùng UID nữa)
                         userController.getUserByEmail(email,
                                 user -> {
-                                    Toast.makeText(LoginActivity.this, "Đăng nhập thành công! Chào " + user.getUsername(), Toast.LENGTH_SHORT).show();
+                                    showDialog("Đăng nhập thành công", "Chào " + user.getUsername());
                                     Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                     startActivity(intent);
                                     finish();
                                 },
                                 e -> {
                                     Log.e("LoginActivity", "Không lấy được thông tin người dùng", e);
-                                    Toast.makeText(LoginActivity.this, "Đăng nhập thành công nhưng không lấy được thông tin người dùng", Toast.LENGTH_LONG).show();
+                                    showDialog("Lỗi", "Đăng nhập thành công nhưng không lấy được thông tin người dùng");
                                 });
 
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(LoginActivity.this, "Đăng nhập thất bại: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        String translatedMessage = translateFirebaseErrorMessage(e.getMessage());
+                        showDialog("Đăng nhập thất bại", "Thông tin đăng nhập bị sai");
                     });
         });
     }
+
+    // Hàm hiển thị dialog thông báo
+    private void showDialog(String title, String message) {
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private String translateFirebaseErrorMessage(String errorMessage) {
+        if (errorMessage == null) return "Đã xảy ra lỗi không xác định";
+
+        if (errorMessage.contains("The email address is badly formatted")) {
+            return "Địa chỉ email không đúng định dạng";
+        } else if (errorMessage.contains("There is no user record")) {
+            return "Email không tồn tại";
+        } else if (errorMessage.contains("The password is invalid")) {
+            return "Mật khẩu không đúng";
+        } else if (errorMessage.contains("A network error")) {
+            return "Không thể kết nối mạng. Vui lòng thử lại sau";
+        } else if (errorMessage.contains("We have blocked all requests")) {
+            return "Tạm thời bị chặn do quá nhiều lần đăng nhập sai";
+        }
+
+        return "Lỗi: " + errorMessage;
+    }
 }
+

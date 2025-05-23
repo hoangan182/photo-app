@@ -48,13 +48,13 @@
             android:name=".activity.SignUpActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.StartActivity"
+            android:name=".activity.AccountActivity"
             android:exported="false" />
         <activity
             android:name=".activity.ChangePasswordActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.AccountActivity"
+            android:name=".activity.StartActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
