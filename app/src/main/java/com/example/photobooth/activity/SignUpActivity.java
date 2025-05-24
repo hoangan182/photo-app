@@ -3,27 +3,46 @@ package com.example.photobooth.activity;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
-
+import android.util.Log;
+import com.google.gson.Gson;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
 import com.example.photobooth.R;
 import com.example.photobooth.controllers.UserController;
 import com.example.photobooth.models.User;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Toast;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+
 
 public class SignUpActivity extends Activity {
+    private static final String TAG = "SignUpActivity";
+
     TextView txtLogin1;
     Button btnSignUp;
     EditText edtEmail, edtPassword, edtUsername, edtRetypePassword;
 
-    FirebaseAuth mAuth;
     UserController userController;
 
     @Override
@@ -42,10 +61,8 @@ public class SignUpActivity extends Activity {
             return insets;
         });
 
-        mAuth = FirebaseAuth.getInstance();
         userController = new UserController();
 
-        // Ánh xạ View
         txtLogin1 = findViewById(R.id.txtLogin1);
         btnSignUp = findViewById(R.id.btnSignUp);
         edtEmail = findViewById(R.id.edtEmail);
@@ -76,28 +93,53 @@ public class SignUpActivity extends Activity {
             return;
         }
 
-        mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnSuccessListener(authResult -> {
-                    FirebaseUser firebaseUser = mAuth.getCurrentUser();
-                    if (firebaseUser != null) {
-                        User user = new User();
-                        user.setId(firebaseUser.getUid());
-                        user.setEmail(email);
-                        user.setUsername(username);
-                        user.setCreated_at(System.currentTimeMillis());
-                        user.setUpdated_at(System.currentTimeMillis());
+        // Tạo đối tượng User để lưu Firestore
+        User newUser = new User();
+        newUser.setEmail(email);
+        newUser.setUsername(username);
+        newUser.setCreated_at(System.currentTimeMillis());
+        newUser.setUpdated_at(System.currentTimeMillis());
+        registerUser(email,password, username);
+        // Gọi hàm signUpUserDocument để đăng ký và lưu user
+//        userController.signUpUserDocument(email, password, newUser,
+//                new OnSuccessListener<Void>() {
+//                    @Override
+//                    public void onSuccess(Void unused) {
+//                        showDialog("Thành công", "Đăng ký thành công.");
+//                        finish();
+//                    }
+//                },
+//                new OnFailureListener() {
+//                    @Override
+//                    public void onFailure(Exception e) {
+//                        showDialog("Lỗi", "Đăng ký thất bại: " + e.getMessage());
+//                    }
+//                });
 
-                        userController.createUser(user,
-                                unused -> {
-                                    showDialog("Thành công", "Đăng ký thành công.");
-                                    finish();
-                                },
-                                e -> showDialog("Lỗi", "Đăng ký thất bại: " + e.getMessage()));
-                    }
-                })
-                .addOnFailureListener(e -> showDialog("Lỗi", "Tạo tài khoản thất bại: " + e.getMessage()));
     }
 
+
+    private void registerUser(String email, String password, String username) {
+
+        User newUser = new User();
+
+        newUser.setEmail(email);
+        newUser.setUsername(username);
+
+
+        userController.signUpUserDocument(email, password, newUser, task-> {
+            if(task.isSuccessful()) {
+                Toast.makeText(SignUpActivity.this, "Registration successful", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
+            } else {
+                Log.w(TAG, "signUpUserDocument:failure", task.getException());
+                Toast.makeText(SignUpActivity.this, "Registration failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        } );
+    }
     private void showDialog(String title, String message) {
         new AlertDialog.Builder(SignUpActivity.this)
                 .setTitle(title)

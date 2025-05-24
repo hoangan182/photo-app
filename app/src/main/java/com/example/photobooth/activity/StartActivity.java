@@ -13,6 +13,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.photobooth.R;
+import com.example.photobooth.fragment.AlbumFragment;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -50,12 +51,12 @@ public class StartActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-
+//        FirebaseAuth.getInstance().signOut();
         // 👇 Kiểm tra người dùng đã đăng nhập chưa
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             // ✅ Đã login → vào HomeActivity
-            Intent intent = new Intent(StartActivity.this, HomeActivity.class);
+            Intent intent = new Intent(StartActivity.this, MainActivity.class);
             startActivity(intent);
             finish(); // 👈 Không quay lại StartActivity khi nhấn back
         }
