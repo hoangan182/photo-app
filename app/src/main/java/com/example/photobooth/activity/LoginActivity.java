@@ -42,12 +42,7 @@ public class LoginActivity extends AppCompatActivity {
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(
-                    v.getPaddingLeft() + systemBars.left,
-                    v.getPaddingTop(),
-                    v.getPaddingRight() + systemBars.right,
-                    v.getPaddingBottom()
-            );
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
             return insets;
         });
 

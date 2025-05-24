@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/page_option_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#E7E0FF">
+
+    <TextView
+        android:id="@+id/optionDeleteAllPhoto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/deleteallphoto"
+        android:drawablePadding="8dp"
+        android:padding="16dp"
+        android:text="Xoá tất cả ảnh"
+        android:textColor="@android:color/black"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/optionRestoreAllPhoto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/restorephoto"
+        android:drawablePadding="8dp"
+        android:padding="16dp"
+        android:text="Khôi phục tất cả ảnh"
+        android:textSize="16sp"
+        android:textColor="@android:color/black" />
+</LinearLayout>

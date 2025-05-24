@@ -18,28 +18,17 @@
 
             <TextView
                 android:layout_width="0dp"
-                android:id="@+id/txtBackFullScreenImage"
+                android:id="@+id/txtBackFullScreenDeletedImage"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:drawableLeft="@drawable/baseline_arrow_back_ios_new_24"
                 android:text="Quay lại"
                 android:textSize="16sp" />
 
-            <TextView
-                android:id="@+id/textView12"
-                android:layout_width="3dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Sửa"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:gravity="end"
-                android:layout_marginEnd="20dp"/>
-
         </LinearLayout>
 
         <ImageView
-            android:id="@+id/fullScreenImageView"
+            android:id="@+id/fullScreenDeletedImageView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:scaleType="fitCenter"
@@ -60,13 +49,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:src="@drawable/heart"/>
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:src="@drawable/add_album"/>
+                android:src="@drawable/restore_photo" />
 
             <ImageView
                 android:layout_width="wrap_content"

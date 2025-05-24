@@ -8,9 +8,7 @@
     android:background="#E7E0FF"
     android:orientation="vertical"
     android:paddingLeft="20dp"
-    android:paddingTop="60dp"
     android:paddingRight="20dp"
-    android:paddingBottom="50dp"
     tools:context=".activity.SignUpActivity">
 
     <TextView
@@ -85,19 +83,35 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editEmail" />
 
-    <EditText
-        android:id="@+id/editPassword"
+
+
+    <FrameLayout
+        android:id="@+id/frameLayout1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/edittext_background"
-        android:ems="10"
-        android:hint="Nhập mật khẩu"
         android:layout_marginTop="5dp"
-        android:inputType="textPassword"
-        android:padding="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView4" />
+        app:layout_constraintTop_toBottomOf="@+id/textView4">
+
+        <EditText
+            android:id="@+id/editSignUpPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/edittext_background"
+            android:ems="10"
+            android:hint="Nhập mật khẩu"
+            android:padding="12dp"
+            android:inputType="textPassword" />
+
+        <ImageView
+            android:id="@+id/imgShowSignUpPassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            android:layout_marginEnd="10dp"
+            android:src="@drawable/show_password" />
+    </FrameLayout>
 
     <TextView
         android:id="@+id/textView5"
@@ -107,21 +121,35 @@
         android:layout_marginTop="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editPassword" />
+        app:layout_constraintTop_toBottomOf="@+id/frameLayout1" />
 
-    <EditText
-        android:id="@+id/editRetypePassword"
+    <FrameLayout
+        android:id="@+id/frameLayout2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/edittext_background"
-        android:ems="10"
-        android:hint="Nhập lại mật khẩu"
         android:layout_marginTop="5dp"
-        android:inputType="textPassword"
-        android:padding="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView5" />
+        app:layout_constraintTop_toBottomOf="@+id/textView5">
+
+        <EditText
+            android:id="@+id/editRetypePassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/edittext_background"
+            android:ems="10"
+            android:hint="Nhập lại mật khẩu"
+            android:inputType="textPassword"
+            android:padding="12dp" />
+
+        <ImageView
+            android:id="@+id/imgShowRetypePassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            android:layout_marginEnd="10dp"
+            android:src="@drawable/show_password" />
+    </FrameLayout>
 
     <Button
         android:id="@+id/btnSignUp"
@@ -134,7 +162,7 @@
         android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editRetypePassword" />
+        app:layout_constraintTop_toBottomOf="@+id/frameLayout2" />
 
     <TextView
         android:id="@+id/txtLogin1"
