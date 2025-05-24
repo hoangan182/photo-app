@@ -35,7 +35,7 @@
             android:textStyle="bold" />
 
         <ImageView
-            android:id="@+id/imgShowOption"
+            android:id="@+id/imgShowOptionAllPhoto"
             android:layout_width="8dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center|left"

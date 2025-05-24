@@ -81,65 +81,63 @@ public class SignUpActivity extends Activity {
         String retypePassword = edtRetypePassword.getText().toString().trim();
         String username = edtUsername.getText().toString().trim();
 
-        // Kiểm tra rỗng
+        // Validate input
         if (email.isEmpty() || password.isEmpty() || retypePassword.isEmpty() || username.isEmpty()) {
             showDialog("Lỗi", "Vui lòng điền đầy đủ thông tin.");
             return;
         }
 
-        // Kiểm tra mật khẩu khớp nhau
+        // Validate email format
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            showDialog("Lỗi", "Email không hợp lệ.");
+            return;
+        }
+
+        // Validate password length
+        if (password.length() < 6) {
+            showDialog("Lỗi", "Mật khẩu phải có ít nhất 6 ký tự.");
+            return;
+        }
+
+        // Validate password match
         if (!password.equals(retypePassword)) {
             showDialog("Lỗi", "Mật khẩu và xác nhận mật khẩu không khớp.");
             return;
         }
 
-        // Tạo đối tượng User để lưu Firestore
+        // Create user object
         User newUser = new User();
         newUser.setEmail(email);
         newUser.setUsername(username);
         newUser.setCreated_at(System.currentTimeMillis());
         newUser.setUpdated_at(System.currentTimeMillis());
-        registerUser(email,password, username);
-        // Gọi hàm signUpUserDocument để đăng ký và lưu user
-//        userController.signUpUserDocument(email, password, newUser,
-//                new OnSuccessListener<Void>() {
-//                    @Override
-//                    public void onSuccess(Void unused) {
-//                        showDialog("Thành công", "Đăng ký thành công.");
-//                        finish();
-//                    }
-//                },
-//                new OnFailureListener() {
-//                    @Override
-//                    public void onFailure(Exception e) {
-//                        showDialog("Lỗi", "Đăng ký thất bại: " + e.getMessage());
-//                    }
-//                });
 
-    }
+        // Show loading dialog
+        AlertDialog loadingDialog = new AlertDialog.Builder(this)
+                .setMessage("Đang đăng ký...")
+                .setCancelable(false)
+                .create();
+        loadingDialog.show();
 
-
-    private void registerUser(String email, String password, String username) {
-
-        User newUser = new User();
-
-        newUser.setEmail(email);
-        newUser.setUsername(username);
-
-
-        userController.signUpUserDocument(email, password, newUser, task-> {
-            if(task.isSuccessful()) {
-                Toast.makeText(SignUpActivity.this, "Registration successful", Toast.LENGTH_SHORT).show();
+        // Register user
+        userController.signUpUserDocument(email, password, newUser, task -> {
+            loadingDialog.dismiss();
+            
+            if (task.isSuccessful()) {
+                Toast.makeText(SignUpActivity.this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
+                // Navigate to login screen
                 Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
             } else {
-                Log.w(TAG, "signUpUserDocument:failure", task.getException());
-                Toast.makeText(SignUpActivity.this, "Registration failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                String errorMessage = task.getException() != null ? 
+                    task.getException().getMessage() : "Đăng ký thất bại";
+                showDialog("Lỗi", errorMessage);
             }
-        } );
+        });
     }
+
     private void showDialog(String title, String message) {
         new AlertDialog.Builder(SignUpActivity.this)
                 .setTitle(title)

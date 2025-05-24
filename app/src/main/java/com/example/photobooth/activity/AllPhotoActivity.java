@@ -1,11 +1,13 @@
 package com.example.photobooth.activity;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,15 +18,17 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.photobooth.R;
 import com.example.photobooth.adapter.ImageAdapter;
+import com.example.photobooth.controllers.ImagePickerController;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class AllPhotoActivity extends AppCompatActivity {
+public class AllPhotoActivity extends AppCompatActivity implements ImagePickerController.ImagePickerCallback {
 
     private List<String> imageUrls = new ArrayList<>();
+    private ImagePickerController imagePickerController;
 
     GridView gridViewAll;
 
@@ -44,10 +48,13 @@ public class AllPhotoActivity extends AppCompatActivity {
             return insets;
         });
 
+        // Initialize ImagePickerController
+        imagePickerController = new ImagePickerController(this, this);
+
         gridViewAll = findViewById(R.id.gridViewAll);
         noAllImageLayout = findViewById(R.id.noAllImageLayout);
         txtBackAllPhoto = findViewById(R.id.txtBackChangePassword);
-        imgShowOption = findViewById(R.id.imgShowOption);
+        imgShowOption = findViewById(R.id.imgShowOptionAllPhoto);
 
         imgShowOption.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -111,7 +118,6 @@ public class AllPhotoActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-
     }
 
     private void showAddOptions() {
@@ -122,19 +128,58 @@ public class AllPhotoActivity extends AppCompatActivity {
         TextView createSubject = view.findViewById(R.id.optionAddImage);
         TextView createFolder = view.findViewById(R.id.optionAddAlbum);
 
-//        createSubject.setOnClickListener(v -> {
-//            bottomSheetDialog.dismiss();
-//            Intent intent = new Intent(this, CreateCourseActivity.class);
-//            startActivity(intent);
-//        });
-//
-//        createFolder.setOnClickListener(v -> {
-//            bottomSheetDialog.dismiss();
-//            Intent intent = new Intent(this, CreateFolderActivity.class);
-//            startActivity(intent);
-//        });
+        createSubject.setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+            if (imagePickerController.hasPermission()) {
+                imagePickerController.openGallery();
+            } else {
+                imagePickerController.requestPermission();
+            }
+        });
+
+        createFolder.setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+            // TODO: Implement add album functionality
+        });
 
         bottomSheetDialog.show();
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        imagePickerController.handleActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        imagePickerController.handleRequestPermissionsResult(requestCode, grantResults);
+    }
+
+    @Override
+    public void onImagePicked(Uri imageUri) {
+        // TODO: Save the image to your project's storage
+        // For now, we'll just add the URI to the list
+        imageUrls.add(imageUri.toString());
+        updateGridView();
+        Toast.makeText(this, "Image added successfully", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onPermissionDenied() {
+        Toast.makeText(this, "Permission denied to access gallery", Toast.LENGTH_SHORT).show();
+    }
+
+    private void updateGridView() {
+        if (imageUrls.isEmpty()) {
+            noAllImageLayout.setVisibility(View.VISIBLE);
+            gridViewAll.setVisibility(View.GONE);
+        } else {
+            noAllImageLayout.setVisibility(View.GONE);
+            gridViewAll.setVisibility(View.VISIBLE);
+            ImageAdapter adapter = new ImageAdapter(this, imageUrls);
+            gridViewAll.setAdapter(adapter);
+        }
+    }
 }
