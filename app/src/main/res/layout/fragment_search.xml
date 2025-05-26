@@ -79,31 +79,6 @@
             android:textSize="18sp" />
 
         <TextView
-            android:id="@+id/txtSelfies"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableLeft="@drawable/selfie"
-            android:layout_marginTop="10dp"
-            android:drawablePadding="20dp"
-            android:ems="10"
-            android:text="Selfies"
-            android:textColor="#504E4E"
-            android:textSize="18sp" />
-
-        <TextView
-            android:id="@+id/txtDocument"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableLeft="@drawable/document"
-            android:layout_marginTop="10dp"
-            android:drawablePadding="20dp"
-            android:ems="10"
-            android:text="Document"
-            android:textColor="#685F5F"
-            android:textSize="18sp" />
-
-
-        <TextView
             android:id="@+id/txtFavorite"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

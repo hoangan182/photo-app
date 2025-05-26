@@ -57,16 +57,25 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <ImageView
+
+    <androidx.cardview.widget.CardView
         android:id="@+id/imageView4"
-        android:layout_width="135dp"
-        android:layout_height="111dp"
-        android:layout_marginTop="92dp"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_marginTop="44dp"
+        android:elevation="4dp"
+        app:cardCornerRadius="110dp"
+        app:cardUseCompatPadding="true"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.51"
+        app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/baseline_account_circle_24" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:srcCompat="@drawable/anhtamthoi" />
+    </androidx.cardview.widget.CardView>
 
     <TextView
         android:id="@+id/textView11"

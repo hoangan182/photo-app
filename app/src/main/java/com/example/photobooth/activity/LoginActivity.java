@@ -3,6 +3,7 @@ package com.example.photobooth.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -10,6 +11,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.text.Html;
+import android.widget.TextView;
+
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,7 +31,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private EditText editUsername, editPassword;
     private Button btnLogin;
-    private TextView signInTextView;
+    private TextView signUpTextView;
 
     ImageView imgShowPassword;
 
@@ -54,7 +58,10 @@ public class LoginActivity extends AppCompatActivity {
         editUsername = findViewById(R.id.editUsername);
         editPassword = findViewById(R.id.editPassword);
         btnLogin = findViewById(R.id.btnLogin);
-        signInTextView = findViewById(R.id.txtSignIn);
+        signUpTextView = findViewById(R.id.txtSignUp);
+        signUpTextView.setText(Html.fromHtml(getString(R.string.sign_up_link)));
+        signUpTextView.setMovementMethod(LinkMovementMethod.getInstance());
+
         imgShowPassword = findViewById(R.id.imgShowPassword);
 
         imgShowPassword.setOnClickListener(new View.OnClickListener() {
@@ -78,7 +85,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
         // Mở màn đăng ký khi chưa có tài khoản
-        signInTextView.setOnClickListener(view -> {
+        signUpTextView.setOnClickListener(view -> {
             Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
             startActivity(intent);
         });

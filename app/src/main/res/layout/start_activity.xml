@@ -56,19 +56,53 @@
         android:layout_marginBottom="28dp"
         android:gravity="center"
         android:text="Bắt đầu khám phá ngay"
-        app:layout_constraintBottom_toTopOf="@+id/txtSignIn"
+        app:layout_constraintBottom_toTopOf="@+id/signInLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <TextView
-        android:id="@+id/txtSignIn"
-        android:layout_width="match_parent"
+<!--    <TextView-->
+<!--        android:id="@+id/txtSignIn"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginBottom="16dp"-->
+<!--        android:gravity="center"-->
+<!--        android:text="@string/signin_text"-->
+<!--        android:textColor="#4E4C4C"-->
+<!--        android:textSize="14sp"-->
+<!--        android:autoLink="none"-->
+<!--        android:linksClickable="true"-->
+<!--        android:textAlignment="center"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="1.0"-->
+<!--        app:layout_constraintStart_toStartOf="parent" />-->
+
+    <LinearLayout
+        android:id="@+id/signInLayout"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="20dp"
         android:layout_marginBottom="16dp"
         android:gravity="center"
-        android:text="Bạn đã có tài khoản? Đăng nhập ngay"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bạn đã có tài khoản? " />
+
+        <TextView
+            android:id="@+id/txtSignIn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/login_link"
+            android:textColor="#0000EE"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

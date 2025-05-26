@@ -8,6 +8,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -37,6 +39,9 @@ public class SignUpActivity extends Activity {
         });
 
         Login1TextView= findViewById(R.id.txtLogin1);
+        Login1TextView.setText(Html.fromHtml(getString(R.string.login_link)));
+        Login1TextView.setMovementMethod(LinkMovementMethod.getInstance());
+
         btnSignUp = findViewById(R.id.btnSignUp);
         editSignUpPassword = findViewById(R.id.editSignUpPassword);
         editRetypePassword = findViewById(R.id.editRetypePassword);

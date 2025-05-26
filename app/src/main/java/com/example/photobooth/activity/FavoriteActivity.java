@@ -29,7 +29,6 @@ public class FavoriteActivity extends AppCompatActivity {
     GridView gridViewFavorite;
     ConstraintLayout noFavoriteImageLayout;
 
-    ImageView imgShowOption;
 
     TextView txtBackFavorite;
 
@@ -47,14 +46,6 @@ public class FavoriteActivity extends AppCompatActivity {
         gridViewFavorite = findViewById(R.id.gridViewFavorite);
         noFavoriteImageLayout = findViewById(R.id.noFavoriteImageLayout);
         txtBackFavorite = findViewById(R.id.txtBackAddAlbum);
-        imgShowOption = findViewById(R.id.imgShowOptionFavorite);
-
-        imgShowOption.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showAddOptions();
-            }
-        });
 
         txtBackFavorite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,30 +100,5 @@ public class FavoriteActivity extends AppCompatActivity {
             intent.putExtra("image_url", imageUrls.get(position));
             startActivity(intent);
         });
-
-
-    }
-
-    private void showAddOptions() {
-        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
-        View view = getLayoutInflater().inflate(R.layout.bottom_sheet_add_options, null);
-        bottomSheetDialog.setContentView(view);
-
-        TextView createSubject = view.findViewById(R.id.optionAddImage);
-        TextView createFolder = view.findViewById(R.id.optionAddAlbum);
-
-//        createSubject.setOnClickListener(v -> {
-//            bottomSheetDialog.dismiss();
-//            Intent intent = new Intent(this, CreateCourseActivity.class);
-//            startActivity(intent);
-//        });
-//
-//        createFolder.setOnClickListener(v -> {
-//            bottomSheetDialog.dismiss();
-//            Intent intent = new Intent(this, CreateFolderActivity.class);
-//            startActivity(intent);
-//        });
-
-        bottomSheetDialog.show();
     }
 }
