@@ -26,8 +26,8 @@
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/textView12"
-                android:layout_width="3dp"
+                android:id="@+id/editButton"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Sửa"
@@ -52,6 +52,7 @@
             android:padding="20dp">
 
             <ImageView
+                android:id="@+id/favoriteButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/heart"
@@ -59,12 +60,14 @@
                 android:layout_marginLeft="70dp"/>
 
             <ImageView
+                android:id="@+id/addToAlbumButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/add_album"
                 android:layout_marginRight="70dp"/>
 
             <ImageView
+                android:id="@+id/deleteButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/delete"/>
@@ -94,11 +97,11 @@
                     android:text="Độ phân giải:"/>
 
                 <TextView
+                    android:id="@+id/resolutionTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="1920x1920"
                     android:gravity="end"/>
-
 
             </LinearLayout>
 
@@ -114,17 +117,15 @@
                     android:text="Dung lượng:"/>
 
                 <TextView
+                    android:id="@+id/sizeTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="1,4 MB"
                     android:gravity="end"/>
 
-
             </LinearLayout>
-
 
         </LinearLayout>
     </LinearLayout>
-
 
 </ScrollView>
