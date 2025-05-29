@@ -23,6 +23,12 @@
         tools:targetApi="31">
 
         <activity
+            android:name=".activity.AllAlbumActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.FullScreenDeletedImage"
+            android:exported="false" />
+        <activity
             android:name=".activity.VideoActivity"
             android:exported="false" />
         <activity

@@ -1,5 +1,6 @@
 package com.example.photobooth.activity;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -200,8 +201,16 @@ public class ImageEditActivity extends AppCompatActivity {
         // Save the edited image
         String editedImagePath = imageStorageController.saveEditedImage(editedBitmap);
         if (editedImagePath != null) {
+            // Pass the edited image path back to AllPhotoActivity
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra("editedImagePath", editedImagePath);
+            setResult(RESULT_OK, resultIntent);
             Toast.makeText(this, "Image saved successfully", Toast.LENGTH_SHORT).show();
-            setResult(RESULT_OK);
+            
+            // Finish both activities to return to AllPhotoActivity
+            Intent intent = new Intent(this, AllPhotoActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
             finish();
         } else {
             Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show();

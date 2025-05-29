@@ -16,7 +16,7 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/txtBackChangePassword"
+            android:id="@+id/txtBackAllPhoto"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -50,15 +50,12 @@
     <!--        android:layout_height="match_parent"-->
     <!--        android:visibility="gone"/>-->
 
-    <GridView
-        android:id="@+id/gridViewAll"
+    <ListView
+        android:id="@+id/listViewAll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:numColumns="3"
-        android:verticalSpacing="8dp"
-        android:horizontalSpacing="8dp"
-        android:stretchMode="columnWidth"
-        android:gravity="center"
+        android:divider="@null"
+        android:dividerHeight="0dp"
         android:visibility="gone"/>
 
 

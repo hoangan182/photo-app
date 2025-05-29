@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">PhotoBooth</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="login_link"><![CDATA[<u>Đăng nhập ngay</u>]]></string>
+    <string name="sign_up_link"><![CDATA[<u>Đăng ký</u>]]></string>
+    <string name="txt_signin_underlined">Bạn chưa có tài khoản? <font color="#0000FF"><u>Đăng ký ngay</u></font></string>
+    <string name="signin_text">Bạn đã có tài khoản? <font color="#0000FF"><u>Đăng nhập ngay</u></font></string>
 </resources>

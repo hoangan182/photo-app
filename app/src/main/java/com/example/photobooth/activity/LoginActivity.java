@@ -2,6 +2,9 @@ package com.example.photobooth.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
+import android.text.method.LinkMovementMethod;
+import android.util.Log;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.view.View;
@@ -10,29 +13,44 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.text.Html;
+import android.widget.TextView;
 
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.example.photobooth.R;
+import com.example.photobooth.controllers.UserController;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class LoginActivity extends AppCompatActivity {
+    boolean isPasswordVisible = false;
 
     private EditText editUsername, editPassword;
     private ImageView imgShowPassword;
     private Button btnLogin;
     private TextView txtSignIn;
-
-    private boolean isPasswordVisible = false;
+    private TextView signUpTextView;
     private FirebaseAuth mAuth;
+    private UserController userController;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_activity); // Đảm bảo bạn đã tạo file layout tương ứng
 
-        // Khởi tạo Firebase Auth
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            return insets;
+        });
+
+        // Khởi tạo Firebase Auth và UserController
         mAuth = FirebaseAuth.getInstance();
 
         // Ánh xạ view
@@ -40,7 +58,9 @@ public class LoginActivity extends AppCompatActivity {
         editPassword = findViewById(R.id.editPassword);
         imgShowPassword = findViewById(R.id.imgShowPassword);
         btnLogin = findViewById(R.id.btnLogin);
-        txtSignIn = findViewById(R.id.txtSignIn);
+        signUpTextView = findViewById(R.id.txtSignUp);
+        signUpTextView.setText(Html.fromHtml(getString(R.string.sign_up_link)));
+        signUpTextView.setMovementMethod(LinkMovementMethod.getInstance());
 
         // Xử lý hiện/ẩn mật khẩu
         imgShowPassword.setOnClickListener(v -> {

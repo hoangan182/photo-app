@@ -8,7 +8,7 @@
     android:background="#E7E0FF"
     tools:context=".activity.ChangeInformationActivity">
 
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="58dp"
@@ -20,40 +20,51 @@
 
         <TextView
             android:id="@+id/txtBackChangeInfo"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
             android:drawableLeft="@drawable/baseline_arrow_back_ios_new_24"
             android:text="Quay lại"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/textView17"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
             android:text="Thay đổi thông tin"
             android:textColor="#666363"
             android:textSize="20sp"
             android:textStyle="bold" />
 
-    </LinearLayout>
+    </FrameLayout>
 
     <ImageView
-        android:id="@+id/imageView4"
-        android:layout_width="87dp"
-        android:layout_height="75dp"
+        android:id="@+id/imgAvatar"
+        android:layout_width="211dp"
+        android:layout_height="224dp"
         android:layout_marginTop="72dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout"
         app:srcCompat="@drawable/baseline_account_circle_24" />
 
+    <TextView
+        android:id="@+id/txtChangeAvartar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Thay đổi ảnh"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imgAvatar" />
+
     <EditText
-        android:id="@+id/editTextText"
-        android:layout_width="220dp"
+        android:id="@+id/editChangeUsername"
+        android:layout_width="match_parent"
         android:layout_height="45dp"
         android:layout_marginTop="30dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
         android:background="@drawable/edittext_background"
         android:ems="10"
         android:hint="Tên người dùng"
@@ -62,49 +73,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.502"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView4" />
-
-    <EditText
-        android:id="@+id/editTextText2"
-        android:layout_width="220dp"
-        android:layout_height="45dp"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/edittext_background"
-        android:ems="10"
-        android:hint="Ngày sinh"
-        android:inputType="text"
-        android:padding="10dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.502"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextText" />
-
-    <EditText
-        android:id="@+id/editTextText3"
-        android:layout_width="220dp"
-        android:layout_height="45dp"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/edittext_background"
-        android:ems="10"
-        android:hint="Giới tính"
-        android:inputType="text"
-        android:padding="10dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.502"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextText2" />
+        app:layout_constraintTop_toBottomOf="@+id/txtChangeAvartar" />
 
     <Button
         android:id="@+id/btnSaveInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
         android:backgroundTint="#FFFFFF"
         android:text="Lưu thông tin"
         android:textColor="#716F6F"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextText3"
-        app:layout_constraintVertical_bias="0.162" />
+        app:layout_constraintTop_toBottomOf="@+id/editChangeUsername" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

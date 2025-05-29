@@ -13,6 +13,7 @@ import android.widget.ImageView;
 
 import com.example.photobooth.R;
 import com.example.photobooth.activity.AddAlbumActivity;
+import com.example.photobooth.activity.AllAlbumActivity;
 import com.example.photobooth.activity.AllPhotoActivity;
 import com.example.photobooth.activity.FavoriteActivity;
 import com.example.photobooth.activity.TrashActivity;
@@ -33,7 +34,7 @@ public class AlbumFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
-    Button favoriteButton, trashButton, allPhotoButton;
+    Button favoriteButton, trashButton, allPhotoButton, btnAlbum;
 
     ImageView btnAddAlbum;
 
@@ -78,6 +79,7 @@ public class AlbumFragment extends Fragment {
         trashButton = view.findViewById(R.id.btntrash);
         allPhotoButton = view.findViewById(R.id.btnAllPhoto);
         btnAddAlbum = view.findViewById(R.id.btnAddAlbum);
+        btnAlbum = view.findViewById(R.id.btnAlbum);
 
         favoriteButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -105,6 +107,14 @@ public class AlbumFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getContext(), AddAlbumActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnAlbum.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getContext(), AllAlbumActivity.class);
                 startActivity(intent);
             }
         });

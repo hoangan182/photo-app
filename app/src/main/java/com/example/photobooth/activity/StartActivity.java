@@ -2,6 +2,8 @@ package com.example.photobooth.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -36,6 +38,8 @@ public class StartActivity extends AppCompatActivity {
 
         startButton = findViewById(R.id.btnLogin);
         signInTextView = findViewById(R.id.txtSignIn);
+        signInTextView.setText(Html.fromHtml(getString(R.string.login_link)));
+        signInTextView.setMovementMethod(LinkMovementMethod.getInstance());
 
         startButton.setOnClickListener(v -> {
             Intent intent = new Intent(StartActivity.this, LoginActivity.class);

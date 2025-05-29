@@ -9,6 +9,7 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.example.photobooth.R;
+import com.example.photobooth.models.PhotoItem;
 
 import java.util.HashSet;
 import java.util.List;
@@ -16,31 +17,31 @@ import java.util.Set;
 
 public class ImageAdapter extends BaseAdapter {
     private final Context context;
-    private final List<String> imageUrls;
+    private final List<PhotoItem> photos;
     private final Set<Integer> selectedItems;
     private final boolean isMultiSelect;
 
     // Constructor for simple mode (without selection)
-    public ImageAdapter(Context context, List<String> imageUrls) {
-        this(context, imageUrls, new HashSet<>(), false);
+    public ImageAdapter(Context context, List<PhotoItem> photos) {
+        this(context, photos, new HashSet<>(), false);
     }
 
     // Constructor for multi-select mode
-    public ImageAdapter(Context context, List<String> imageUrls, Set<Integer> selectedItems, boolean isMultiSelect) {
+    public ImageAdapter(Context context, List<PhotoItem> photos, Set<Integer> selectedItems, boolean isMultiSelect) {
         this.context = context;
-        this.imageUrls = imageUrls;
+        this.photos = photos;
         this.selectedItems = selectedItems;
         this.isMultiSelect = isMultiSelect;
     }
 
     @Override
     public int getCount() {
-        return imageUrls.size();
+        return photos.size();
     }
 
     @Override
-    public Object getItem(int position) {
-        return imageUrls.get(position);
+    public PhotoItem getItem(int position) {
+        return photos.get(position);
     }
 
     @Override
@@ -64,7 +65,7 @@ public class ImageAdapter extends BaseAdapter {
 
         // Load image using Glide
         Glide.with(context)
-            .load(imageUrls.get(position))
+            .load(photos.get(position).getPath())
             .centerCrop()
             .into(holder.imageView);
 

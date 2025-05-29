@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -17,16 +16,16 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.photobooth.R;
 import com.example.photobooth.adapter.ImageAdapter;
 import com.example.photobooth.controllers.FavoriteController;
+import com.example.photobooth.models.PhotoItem;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class FavoriteActivity extends AppCompatActivity {
 
-    private List<String> imageUrls = new ArrayList<>();
+    private List<PhotoItem> photos = new ArrayList<>();
     private GridView gridViewFavorite;
     private ConstraintLayout noFavoriteImageLayout;
-    private ImageView imgShowOption;
     private TextView txtBackFavorite;
     private FavoriteController favoriteController;
 
@@ -58,40 +57,37 @@ public class FavoriteActivity extends AppCompatActivity {
         gridViewFavorite = findViewById(R.id.gridViewFavorite);
         noFavoriteImageLayout = findViewById(R.id.noFavoriteImageLayout);
         txtBackFavorite = findViewById(R.id.txtBackAddAlbum);
-        imgShowOption = findViewById(R.id.imgShowOptionFavorite);
     }
 
     private void setupClickListeners() {
-        imgShowOption.setOnClickListener(view -> showAddOptions());
-
         txtBackFavorite.setOnClickListener(v -> finish());
 
         gridViewFavorite.setOnItemClickListener((parent, view, position, id) -> {
             Intent intent = new Intent(this, FullScreenImageActivity.class);
-            intent.putExtra("imagePath", imageUrls.get(position));
+            intent.putExtra("imagePath", photos.get(position).getPath());
             startActivityForResult(intent, 1);
         });
     }
 
     private void loadFavoriteImages() {
-        imageUrls = favoriteController.getFavoriteImagePaths();
+        List<String> imagePaths = favoriteController.getFavoriteImagePaths();
+        photos.clear();
+        for (String path : imagePaths) {
+            photos.add(new PhotoItem(path, System.currentTimeMillis())); // Using current time as capture date
+        }
         updateGridView();
     }
 
     private void updateGridView() {
-        if (imageUrls.isEmpty()) {
+        if (photos.isEmpty()) {
             noFavoriteImageLayout.setVisibility(View.VISIBLE);
             gridViewFavorite.setVisibility(View.GONE);
         } else {
             noFavoriteImageLayout.setVisibility(View.GONE);
             gridViewFavorite.setVisibility(View.VISIBLE);
-            ImageAdapter adapter = new ImageAdapter(this, imageUrls);
+            ImageAdapter adapter = new ImageAdapter(this, photos);
             gridViewFavorite.setAdapter(adapter);
         }
-    }
-
-    private void showAddOptions() {
-        // This method is kept for future implementation
     }
 
     @Override

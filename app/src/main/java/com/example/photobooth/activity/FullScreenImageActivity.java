@@ -175,9 +175,19 @@ public class FullScreenImageActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 2 && resultCode == RESULT_OK) {
-            // Reload the image after editing
-            loadImage();
-            setResult(RESULT_OK);
+            // Get the edited image path from the result
+            String editedImagePath = data.getStringExtra("editedImagePath");
+            if (editedImagePath != null) {
+                // Update the image path and reload the image
+                imagePath = editedImagePath;
+                loadImage();
+                displayImageDetails();
+                
+                // Pass the edited image path back to AllPhotoActivity
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("editedImagePath", editedImagePath);
+                setResult(RESULT_OK, resultIntent);
+            }
         }
     }
 }
