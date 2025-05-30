@@ -36,23 +36,14 @@
 
     </FrameLayout>
 
-<!--    <androidx.recyclerview.widget.RecyclerView-->
-<!--        android:id="@+id/recycleViewFavorite"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:visibility="gone"/>-->
-
-    <GridView
-        android:id="@+id/gridViewFavorite"
+    <ListView
+        android:id="@+id/listViewFavorite"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:numColumns="3"
-        android:verticalSpacing="8dp"
-        android:horizontalSpacing="8dp"
-        android:stretchMode="columnWidth"
-        android:gravity="center"
+        android:divider="@null"
+        android:dividerHeight="8dp"
+        android:padding="8dp"
         android:visibility="gone"/>
-
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/noFavoriteImageLayout"
