@@ -43,26 +43,30 @@ public class StartActivity extends AppCompatActivity {
 
         startButton.setOnClickListener(v -> {
             Intent intent = new Intent(StartActivity.this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
+            finish(); // Đóng StartActivity sau khi chuyển sang LoginActivity
         });
 
         signInTextView.setOnClickListener(v -> {
             Intent intent = new Intent(StartActivity.this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
+            finish(); // Đóng StartActivity sau khi chuyển sang LoginActivity
         });
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-//        FirebaseAuth.getInstance().signOut();
-        // 👇 Kiểm tra người dùng đã đăng nhập chưa
+        // Kiểm tra người dùng đã đăng nhập chưa
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
-            // ✅ Đã login → vào HomeActivity
+            // Đã login → vào MainActivity
             Intent intent = new Intent(StartActivity.this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
-            finish(); // 👈 Không quay lại StartActivity khi nhấn back
+            finish(); // Đóng StartActivity sau khi chuyển sang MainActivity
         }
     }
 }

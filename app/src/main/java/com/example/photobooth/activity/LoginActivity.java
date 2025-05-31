@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.text.Html;
 import android.widget.TextView;
+import android.app.AlertDialog;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
@@ -42,7 +43,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.login_activity); // Đảm bảo bạn đã tạo file layout tương ứng
+        setContentView(R.layout.login_activity);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -61,6 +62,10 @@ public class LoginActivity extends AppCompatActivity {
         signUpTextView = findViewById(R.id.txtSignUp);
         signUpTextView.setText(Html.fromHtml(getString(R.string.sign_up_link)));
         signUpTextView.setMovementMethod(LinkMovementMethod.getInstance());
+
+        // Cập nhật hint cho editUsername
+        editUsername.setHint("Email");
+        editUsername.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
 
         // Xử lý hiện/ẩn mật khẩu
         imgShowPassword.setOnClickListener(v -> {
@@ -87,26 +92,61 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                editUsername.setError("Email không hợp lệ");
+                editUsername.requestFocus();
+                return;
+            }
+
             if (password.isEmpty()) {
                 editPassword.setError("Vui lòng nhập mật khẩu");
                 editPassword.requestFocus();
                 return;
             }
 
+            // Hiển thị dialog loading
+            AlertDialog loadingDialog = new AlertDialog.Builder(this)
+                    .setMessage("Đang đăng nhập...")
+                    .setCancelable(false)
+                    .create();
+            loadingDialog.show();
+
             // Đăng nhập với Firebase Authentication
             mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(task -> {
+                        loadingDialog.dismiss();
                         if (task.isSuccessful()) {
                             Toast.makeText(LoginActivity.this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
                             finish();
                         } else {
-                            Toast.makeText(LoginActivity.this, "Đăng nhập thất bại: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                            String errorMessage = task.getException() != null ? 
+                                task.getException().getMessage() : "Đăng nhập thất bại";
+                            if (errorMessage.contains("no user record")) {
+                                errorMessage = "Email chưa được đăng ký";
+                            } else if (errorMessage.contains("password is invalid")) {
+                                errorMessage = "Mật khẩu không đúng";
+                            }
+                            Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                         }
                     });
         });
 
         // Chuyển sang màn hình đăng ký
-        txtSignIn.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, SignUpActivity.class)));
+        signUpTextView.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
+            startActivity(intent);
+        });
+    }
+
+    @Override
+    public void onBackPressed() {
+        // Chuyển về màn hình start khi nhấn back
+        Intent intent = new Intent(LoginActivity.this, StartActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 }

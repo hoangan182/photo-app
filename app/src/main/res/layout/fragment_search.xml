@@ -43,64 +43,127 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="16dp">
 
-        <Button
-            android:id="@+id/btnSearch"
+        <EditText
+            android:id="@+id/searchEditText"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:backgroundTint="#ffffff"
-            android:drawableLeft="@drawable/baseline_search_24"
-            android:gravity="center|start"
-            android:text="Tìm kiếm"
-            android:textColor="#433E3E"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/textView10"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:text="Đề xuất"
-            android:textSize="18sp" />
-
-        <TextView
-            android:id="@+id/txtVideo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableLeft="@drawable/play_button"
-            android:drawablePadding="20dp"
-            android:layout_marginTop="15dp"
-            android:ems="10"
-            android:text="Video"
-            android:textColor="#474545"
-            android:textSize="18sp" />
-
-        <TextView
-            android:id="@+id/txtFavorite"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableLeft="@drawable/favorite"
-            android:layout_marginTop="10dp"
-            android:drawablePadding="20dp"
-            android:ems="10"
-            android:text="Ảnh yêu thích"
-            android:textColor="#685F5F"
-            android:textSize="18sp" />
-
-        <TextView
-            android:id="@+id/txtRecentlyAdded"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableLeft="@drawable/clock"
-            android:layout_marginTop="10dp"
-            android:drawablePadding="20dp"
-            android:ems="10"
-            android:text="Mới thêm gần đây"
-            android:textColor="#685F5F"
-            android:textSize="18sp" />
-
+            android:background="@drawable/edit_text_background"
+            android:hint="Tìm kiếm album..."
+            android:padding="12dp"
+            android:textSize="16sp"
+            android:drawableStart="@drawable/baseline_search_24"
+            android:drawablePadding="8dp"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1"
+            android:gravity="center_vertical" />
     </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <GridView
+            android:id="@+id/searchResultsGrid"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:horizontalSpacing="16dp"
+            android:numColumns="2"
+            android:padding="8dp"
+            android:stretchMode="columnWidth"
+            android:verticalSpacing="16dp"
+            android:visibility="gone" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/noSearchResultsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/noResultsImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="64dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.496"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/no_favorit_img" />
+
+            <TextView
+                android:id="@+id/noResultsText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Không tìm thấy album nào"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.498"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/noResultsImage" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <LinearLayout
+            android:id="@+id/suggestionsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:id="@+id/textView10"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Đề xuất"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/txtVideo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@drawable/play_button"
+                android:drawablePadding="20dp"
+                android:layout_marginTop="15dp"
+                android:ems="10"
+                android:text="Video"
+                android:textColor="#474545"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/txtFavorite"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@drawable/favorite"
+                android:layout_marginTop="10dp"
+                android:drawablePadding="20dp"
+                android:ems="10"
+                android:text="Ảnh yêu thích"
+                android:textColor="#685F5F"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/txtRecentlyAdded"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@drawable/clock"
+                android:layout_marginTop="10dp"
+                android:drawablePadding="20dp"
+                android:ems="10"
+                android:text="Mới thêm gần đây"
+                android:textColor="#685F5F"
+                android:textSize="18sp" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
 </LinearLayout>

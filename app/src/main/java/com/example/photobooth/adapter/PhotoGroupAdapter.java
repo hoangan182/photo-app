@@ -1,5 +1,6 @@
 package com.example.photobooth.adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -37,7 +38,7 @@ public class PhotoGroupAdapter extends BaseAdapter {
     private OnPhotoSelectionListener selectionListener;
 
     public interface OnPhotoSelectionListener {
-        void onSelectionChanged(int selectedCount);
+        void onPhotoSelected(PhotoItem photo, boolean isSelected);
     }
 
     public void setOnPhotoSelectionListener(OnPhotoSelectionListener listener) {
@@ -132,20 +133,25 @@ public class PhotoGroupAdapter extends BaseAdapter {
         photoGrid.setOnItemClickListener((parent1, view, position1, id) -> {
             PhotoItem photo = group.photos.get(position1);
             if (isMultiSelect) {
+                // Toggle selection when in multi-select mode
                 togglePhotoSelection(photo);
             } else {
+                // Open full screen view when not in multi-select mode
                 Intent intent = new Intent(context, FullScreenImageActivity.class);
-                intent.putExtra("imagePath", photo.getPath());
-                context.startActivity(intent);
+                intent.putExtra("photo_path", photo.getPath());
+                ((Activity) context).startActivityForResult(intent, 1);
             }
         });
 
         photoGrid.setOnItemLongClickListener((parent1, view, position1, id) -> {
             if (!isMultiSelect) {
+                // Start multi-select mode
                 isMultiSelect = true;
                 PhotoItem photo = group.photos.get(position1);
                 togglePhotoSelection(photo);
-                notifyDataSetChanged();
+                if (selectionListener != null) {
+                    selectionListener.onPhotoSelected(photo, true);
+                }
             }
             return true;
         });
@@ -157,7 +163,7 @@ public class PhotoGroupAdapter extends BaseAdapter {
         boolean isSelected = !selectedItems.getOrDefault(photo.getPath(), false);
         selectedItems.put(photo.getPath(), isSelected);
         if (selectionListener != null) {
-            selectionListener.onSelectionChanged(getSelectedCount());
+            selectionListener.onPhotoSelected(photo, isSelected);
         }
         notifyDataSetChanged();
     }

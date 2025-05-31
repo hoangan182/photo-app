@@ -6,8 +6,11 @@ import android.view.View;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.AdapterView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.graphics.Insets;
@@ -63,7 +66,7 @@ public class TrashActivity extends AppCompatActivity {
     private void initializeViews() {
         gridViewTrash = findViewById(R.id.gridViewTrash);
         noTrashImageLayout = findViewById(R.id.noTrashImageLayout);
-//        imgShowOption = findViewById(R.id.imgShowOptionTrash);
+        imgShowOption = findViewById(R.id.imgTrashPageOption);
         txtBackTrash = findViewById(R.id.txtBackTrash);
 
         // Set initial visibility
@@ -80,12 +83,25 @@ public class TrashActivity extends AppCompatActivity {
             txtBackTrash.setOnClickListener(v -> finish());
         }
 
+        if (imgShowOption != null) {
+            imgShowOption.setOnClickListener(v -> showTrashOption());
+        }
+
         if (gridViewTrash != null) {
+            // Click to view full screen
             gridViewTrash.setOnItemClickListener((parent, view, position, id) -> {
                 PhotoItem photo = photos.get(position);
                 Intent intent = new Intent(this, FullScreenImageActivity.class);
                 intent.putExtra("imagePath", photo.getPath());
+                intent.putExtra("isTrash", true);
                 startActivityForResult(intent, 1);
+            });
+
+            // Long press to show delete/restore options
+            gridViewTrash.setOnItemLongClickListener((parent, view, position, id) -> {
+                PhotoItem photo = photos.get(position);
+                showPhotoOptionsDialog(photo);
+                return true;
             });
         }
     }
@@ -111,15 +127,6 @@ public class TrashActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1 && resultCode == RESULT_OK) {
-            // Reload trash images after returning from FullScreenImageActivity
-            loadTrashImages();
-        }
-    }
-
     private void showTrashOption() {
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
         View view = getLayoutInflater().inflate(R.layout.trash_page_option, null);
@@ -128,6 +135,86 @@ public class TrashActivity extends AppCompatActivity {
         TextView deleteAll = view.findViewById(R.id.optionDeleteAllPhoto);
         TextView restoreAll = view.findViewById(R.id.optionRestoreAllPhoto);
 
+        deleteAll.setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+            showDeleteAllConfirmationDialog();
+        });
+
+        restoreAll.setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+            showRestoreAllConfirmationDialog();
+        });
+
         bottomSheetDialog.show();
+    }
+
+    private void showDeleteAllConfirmationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Xóa tất cả ảnh")
+                .setMessage("Bạn có chắc chắn muốn xóa vĩnh viễn tất cả ảnh trong thùng rác?")
+                .setPositiveButton("Xóa", (dialog, which) -> {
+                    trashController.deleteAllImages();
+                    loadTrashImages();
+                    Toast.makeText(this, "Đã xóa tất cả ảnh", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void showRestoreAllConfirmationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Khôi phục tất cả ảnh")
+                .setMessage("Bạn có chắc chắn muốn khôi phục tất cả ảnh từ thùng rác?")
+                .setPositiveButton("Khôi phục", (dialog, which) -> {
+                    trashController.restoreAllImages();
+                    loadTrashImages();
+                    Toast.makeText(this, "Đã khôi phục tất cả ảnh", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void showPhotoOptionsDialog(PhotoItem photo) {
+        String[] options = {"Khôi phục", "Xóa vĩnh viễn"};
+        new AlertDialog.Builder(this)
+                .setTitle("Tùy chọn")
+                .setItems(options, (dialog, which) -> {
+                    switch (which) {
+                        case 0: // Restore
+                            if (trashController.restoreImage(photo.getPath())) {
+                                Toast.makeText(this, "Đã khôi phục ảnh", Toast.LENGTH_SHORT).show();
+                                loadTrashImages();
+                            } else {
+                                Toast.makeText(this, "Không thể khôi phục ảnh", Toast.LENGTH_SHORT).show();
+                            }
+                            break;
+                        case 1: // Delete permanently
+                            new AlertDialog.Builder(this)
+                                    .setTitle("Xóa vĩnh viễn")
+                                    .setMessage("Bạn có chắc chắn muốn xóa vĩnh viễn ảnh này?")
+                                    .setPositiveButton("Xóa", (dialogInterface, i) -> {
+                                        if (trashController.permanentlyDeleteImage(photo.getPath())) {
+                                            Toast.makeText(this, "Đã xóa vĩnh viễn ảnh", Toast.LENGTH_SHORT).show();
+                                            loadTrashImages();
+                                        } else {
+                                            Toast.makeText(this, "Không thể xóa ảnh", Toast.LENGTH_SHORT).show();
+                                        }
+                                    })
+                                    .setNegativeButton("Hủy", null)
+                                    .show();
+                            break;
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1 && resultCode == RESULT_OK) {
+            // Reload trash images after returning from FullScreenImageActivity
+            loadTrashImages();
+        }
     }
 }

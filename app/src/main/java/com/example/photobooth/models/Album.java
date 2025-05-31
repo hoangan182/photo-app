@@ -1,5 +1,7 @@
 package com.example.photobooth.models;
 
+import java.util.ArrayList;
+import java.util.List;
 
 public class Album {
     private String id;
@@ -7,9 +9,12 @@ public class Album {
     private String description;
     private long created_at;
     private long updated_at;
+    private String coverPath;
+    private List<String> photoPaths;
 
     // Constructor rỗng cần thiết cho Firebase
     public Album() {
+        this.photoPaths = new ArrayList<>();
     }
 
     // Constructor đầy đủ
@@ -19,6 +24,7 @@ public class Album {
         this.description = description;
         this.created_at = created_at;
         this.updated_at = updated_at;
+        this.photoPaths = new ArrayList<>();
     }
 
     // Getters & Setters
@@ -62,6 +68,29 @@ public class Album {
         this.updated_at = updated_at;
     }
 
+    public String getCoverPath() {
+        return coverPath;
+    }
+
+    public void setCoverPath(String coverPath) {
+        this.coverPath = coverPath;
+    }
+
+    public List<String> getPhotoPaths() {
+        return photoPaths;
+    }
+
+    public void setPhotoPaths(List<String> photoPaths) {
+        this.photoPaths = photoPaths;
+    }
+
+    public void addPhoto(String photoPath) {
+        if (this.photoPaths == null) {
+            this.photoPaths = new ArrayList<>();
+        }
+        this.photoPaths.add(photoPath);
+    }
+
     @Override
     public String toString() {
         return "Album{" +
@@ -70,6 +99,8 @@ public class Album {
                 ", description='" + description + '\'' +
                 ", created_at=" + created_at +
                 ", updated_at=" + updated_at +
+                ", coverPath='" + coverPath + '\'' +
+                ", photoPaths=" + photoPaths +
                 '}';
     }
 }

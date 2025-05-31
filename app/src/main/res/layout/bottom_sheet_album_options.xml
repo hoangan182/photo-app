@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bottom_sheet_background"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:background="#CCCCCC" />
+
+    <TextView
+        android:id="@+id/editAlbumOption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableStart="@drawable/baseline_edit_24"
+        android:drawablePadding="16dp"
+        android:padding="16dp"
+        android:text="Sửa tên album"
+        android:textColor="#383434"
+        android:textSize="16sp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="8dp"
+        android:background="#E0E0E0" />
+
+    <TextView
+        android:id="@+id/addPhotoOption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableStart="@drawable/baseline_add_photo_alternate_24"
+        android:drawablePadding="16dp"
+        android:padding="16dp"
+        android:text="Thêm ảnh"
+        android:textColor="#383434"
+        android:textSize="16sp" />
+
+</LinearLayout> 

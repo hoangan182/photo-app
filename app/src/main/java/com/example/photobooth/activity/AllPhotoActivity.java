@@ -1,14 +1,19 @@
 package com.example.photobooth.activity;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.EditText;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
@@ -23,7 +28,11 @@ import com.example.photobooth.R;
 import com.example.photobooth.adapter.PhotoGroupAdapter;
 import com.example.photobooth.controllers.ImagePickerController;
 import com.example.photobooth.controllers.ImageStorageController;
+import com.example.photobooth.controllers.TrashController;
+import com.example.photobooth.controllers.FavoriteController;
+import com.example.photobooth.controllers.AlbumController;
 import com.example.photobooth.models.PhotoItem;
+import com.example.photobooth.models.Album;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.io.IOException;
@@ -35,8 +44,42 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
     private List<PhotoItem> photos;
     private ImagePickerController imagePickerController;
     private ImageStorageController imageStorageController;
+    private TrashController trashController;
+    private FavoriteController favoriteController;
+    private AlbumController albumController;
     private PhotoGroupAdapter photoAdapter;
-    private ActionMode actionMode;
+    private android.view.ActionMode actionMode;
+
+    private final android.view.ActionMode.Callback actionModeCallback = new android.view.ActionMode.Callback() {
+        @Override
+        public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
+            mode.getMenuInflater().inflate(R.menu.menu_photo_selection, menu);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(android.view.ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
+            if (item.getItemId() == R.id.action_delete) {
+                showDeleteConfirmationDialog();
+                return true;
+            } else if (item.getItemId() == R.id.action_add_to_album) {
+                showCreateAlbumDialog();
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public void onDestroyActionMode(android.view.ActionMode mode) {
+            photoAdapter.setMultiSelect(false);
+            actionMode = null;
+        }
+    };
 
     private ListView listViewAll;
     private ImageView imgShowOption;
@@ -63,6 +106,9 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
         // Initialize controllers
         imagePickerController = new ImagePickerController(this, this);
         imageStorageController = new ImageStorageController(this);
+        trashController = new TrashController(this);
+        favoriteController = new FavoriteController(this);
+        albumController = new AlbumController(this);
 
         // Set click listeners
         setupClickListeners();
@@ -99,8 +145,18 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
     private void loadImagesFromStorage() {
         try {
             Log.d("AllPhotoActivity", "Loading images from storage");
-            photos = imageStorageController.loadImages();
-            Log.d("AllPhotoActivity", "Loaded " + photos.size() + " images");
+            List<PhotoItem> allPhotos = imageStorageController.loadImages();
+            List<String> trashPaths = trashController.getTrashImagePaths();
+            
+            // Filter out photos that are in trash
+            photos = new ArrayList<>();
+            for (PhotoItem photo : allPhotos) {
+                if (!trashPaths.contains(photo.getPath())) {
+                    photos.add(photo);
+                }
+            }
+            
+            Log.d("AllPhotoActivity", "Loaded " + photos.size() + " images (filtered from " + allPhotos.size() + " total)");
             // Update UI on the main thread
             runOnUiThread(this::updateListView);
         } catch (Exception e) {
@@ -164,7 +220,11 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
 
         createFolder.setOnClickListener(v -> {
             bottomSheetDialog.dismiss();
-            // TODO: Implement add album functionality
+            if (photoAdapter != null) {
+                photoAdapter.setMultiSelect(true);
+                actionMode = startActionMode(actionModeCallback);
+                Toast.makeText(this, "Chọn ảnh để tạo album mới", Toast.LENGTH_SHORT).show();
+            }
         });
 
         bottomSheetDialog.show();
@@ -188,62 +248,14 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
     }
 
     @Override
-    public void onSelectionChanged(int selectedCount) {
-        if (selectedCount > 0) {
-            if (actionMode == null) {
-                actionMode = startSupportActionMode(new ActionMode.Callback() {
-                    @Override
-                    public boolean onCreateActionMode(ActionMode mode, android.view.Menu menu) {
-                        mode.getMenuInflater().inflate(R.menu.menu_photo_selection, menu);
-                        return true;
-                    }
-
-                    @Override
-                    public boolean onPrepareActionMode(ActionMode mode, android.view.Menu menu) {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean onActionItemClicked(ActionMode mode, android.view.MenuItem item) {
-                        if (item.getItemId() == R.id.action_delete) {
-                            showDeleteConfirmationDialog();
-                            return true;
-                        }
-                        return false;
-                    }
-
-                    @Override
-                    public void onDestroyActionMode(ActionMode mode) {
-                        actionMode = null;
-                        photoAdapter.setMultiSelect(false);
-                    }
-                });
-            }
-            actionMode.setTitle(selectedCount + " được chọn");
-        } else {
-            if (actionMode != null) {
-                actionMode.finish();
-            }
-        }
-    }
-
-    private void showDeleteConfirmationDialog() {
-        new AlertDialog.Builder(this)
-            .setTitle("Xóa ảnh này")
-            .setMessage("Bạn có muốn xóa ảnh đã chọn không?")
-            .setPositiveButton("Xóa", (dialog, which) -> deleteSelectedPhotos())
-            .setNegativeButton("Hủy", null)
-            .show();
-    }
-
-    private void deleteSelectedPhotos() {
-        for (PhotoItem photo : photoAdapter.getSelectedItems()) {
-            imageStorageController.deleteImage(photo.getPath());
-        }
-        photoAdapter.clearSelection();
-        loadImagesFromStorage();
+    public void onPhotoSelected(PhotoItem photo, boolean isSelected) {
         if (actionMode != null) {
-            actionMode.finish();
+            // Update action mode title
+            int count = photoAdapter.getSelectedItems().size();
+            actionMode.setTitle(count + " selected");
+        } else if (isSelected) {
+            // Start action mode when first photo is selected
+            actionMode = startActionMode(actionModeCallback);
         }
     }
 
@@ -252,41 +264,124 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
         super.onActivityResult(requestCode, resultCode, data);
         Log.d("AllPhotoActivity", "onActivityResult called - requestCode: " + requestCode + ", resultCode: " + resultCode);
         
-        if (requestCode == 2 && resultCode == RESULT_OK) {
-            // Check if we received an edited image path
-            String editedImagePath = data.getStringExtra("editedImagePath");
-            Log.d("AllPhotoActivity", "Received edited image path: " + editedImagePath);
-            
-            if (editedImagePath != null) {
-                // Update UI on the main thread
-                runOnUiThread(() -> {
-                    Log.d("AllPhotoActivity", "Starting UI update on main thread");
-                    // Reload all photos
-                    loadImagesFromStorage();
-                    
-                    // Force adapter to refresh
-                    if (photoAdapter != null) {
-                        Log.d("AllPhotoActivity", "Notifying adapter of data change");
-                        photoAdapter.notifyDataSetChanged();
-                    } else {
-                        Log.e("AllPhotoActivity", "photoAdapter is null");
-                    }
-                    
-                    // Force list view to refresh
-                    if (listViewAll != null) {
-                        Log.d("AllPhotoActivity", "Refreshing ListView");
-                        listViewAll.invalidateViews();
-                        listViewAll.requestLayout();
-                        listViewAll.post(() -> {
-                            Log.d("AllPhotoActivity", "Post refresh of ListView");
+        if (resultCode == RESULT_OK) {
+            if (requestCode == 2) {
+                // Handle edited image
+                String editedImagePath = data.getStringExtra("editedImagePath");
+                Log.d("AllPhotoActivity", "Received edited image path: " + editedImagePath);
+                
+                if (editedImagePath != null) {
+                    // Update UI on the main thread
+                    runOnUiThread(this::loadImagesFromStorage);
+                }
+            } else {
+                // Handle deleted image
+                String deletedPhotoPath = data.getStringExtra("deleted_photo_path");
+                if (deletedPhotoPath != null) {
+                    Log.d("AllPhotoActivity", "Photo was deleted: " + deletedPhotoPath);
+                    // Remove the deleted photo from the current list immediately
+                    photos.removeIf(photo -> photo.getPath().equals(deletedPhotoPath));
+                    // Update UI immediately
+                    runOnUiThread(() -> {
+                        if (photoAdapter != null) {
+                            photoAdapter.updatePhotos(photos);
+                            photoAdapter.notifyDataSetChanged();
+                        }
+                        if (listViewAll != null) {
                             listViewAll.invalidateViews();
                             listViewAll.requestLayout();
-                        });
-                    } else {
-                        Log.e("AllPhotoActivity", "listViewAll is null");
-                    }
-                });
+                        }
+                        // Then reload from storage to ensure consistency
+                        loadImagesFromStorage();
+                    });
+                }
             }
         }
+    }
+
+    private void showDeleteConfirmationDialog() {
+        List<PhotoItem> selectedPhotos = photoAdapter.getSelectedItems();
+        if (selectedPhotos.isEmpty()) {
+            return;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("Xóa ảnh")
+                .setMessage("Bạn có chắc chắn muốn xóa " + selectedPhotos.size() + " ảnh đã chọn?")
+                .setPositiveButton("Xóa", (dialog, which) -> deleteSelectedPhotos(selectedPhotos))
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void deleteSelectedPhotos(List<PhotoItem> selectedPhotos) {
+        for (PhotoItem photo : selectedPhotos) {
+            // Move to trash
+            trashController.addToTrash(photo.getPath());
+            // Remove from favorites if it's a favorite
+            if (favoriteController.isFavorite(photo.getPath())) {
+                favoriteController.removeFavorite(photo.getPath());
+            }
+            // Remove from albums if it's in any album
+            List<Album> albums = albumController.getAllAlbums();
+            for (Album album : albums) {
+                if (album.getPhotoPaths().contains(photo.getPath())) {
+                    albumController.removePhotoFromAlbum(album.getId(), photo.getPath());
+                }
+            }
+        }
+        
+        // Reload photos
+        loadImagesFromStorage();
+        
+        // Finish action mode
+        if (actionMode != null) {
+            actionMode.finish();
+        }
+        
+        Toast.makeText(this, "Đã xóa " + selectedPhotos.size() + " ảnh", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showCreateAlbumDialog() {
+        List<PhotoItem> selectedPhotos = photoAdapter.getSelectedItems();
+        if (selectedPhotos.isEmpty()) {
+            return;
+        }
+
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_album_name, null);
+        EditText editText = dialogView.findViewById(R.id.editAlbumName);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Tạo album mới")
+                .setView(dialogView)
+                .setPositiveButton("Tạo", (dialog, which) -> {
+                    String albumName = editText.getText().toString().trim();
+                    if (!albumName.isEmpty()) {
+                        createNewAlbum(albumName, selectedPhotos);
+                    } else {
+                        Toast.makeText(this, "Vui lòng nhập tên album", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void createNewAlbum(String albumName, List<PhotoItem> selectedPhotos) {
+        // Create new album
+        Album album = albumController.createAlbum(albumName, "", null);
+        
+        // Add selected photos to album
+        for (PhotoItem photo : selectedPhotos) {
+            Bitmap bitmap = BitmapFactory.decodeFile(photo.getPath());
+            if (bitmap != null) {
+                albumController.addPhotoToAlbum(album.getId(), bitmap);
+            }
+        }
+        
+        // Finish action mode
+        if (actionMode != null) {
+            actionMode.finish();
+        }
+        
+        Toast.makeText(this, "Đã tạo album " + albumName + " với " + selectedPhotos.size() + " ảnh", Toast.LENGTH_SHORT).show();
     }
 }

@@ -3,7 +3,7 @@ package com.example.photobooth.activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
+import android.media.ExifInterface;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -17,26 +17,41 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.bumptech.glide.Glide;
 import com.example.photobooth.R;
+import com.example.photobooth.controllers.AlbumController;
 import com.example.photobooth.controllers.FavoriteController;
 import com.example.photobooth.controllers.ImageStorageController;
-import com.example.photobooth.models.Image;
+import com.example.photobooth.controllers.TrashController;
+import com.example.photobooth.models.Album;
 
 import java.io.File;
-import java.text.DecimalFormat;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 public class FullScreenImageActivity extends AppCompatActivity {
 
-    private ImageView fullScreenImageView;
+    private ImageView fullScreenImage;
+    private TextView txtBack;
+    private TextView editButton;
     private ImageView favoriteButton;
+    private ImageView addToAlbumButton;
     private ImageView deleteButton;
     private TextView resolutionTextView;
     private TextView sizeTextView;
-    private String imagePath;
-    private boolean isFavorite = false;
-    private ImageStorageController imageStorageController;
+    private ImageView restoreButton;
+    private ImageView permanentDeleteButton;
+
+    private AlbumController albumController;
     private FavoriteController favoriteController;
+    private ImageStorageController imageStorageController;
+    private TrashController trashController;
+    private String photoPath;
+    private String albumId;
+    private boolean isFavorite;
+    private boolean isTrash;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,145 +64,275 @@ public class FullScreenImageActivity extends AppCompatActivity {
             return insets;
         });
 
+        // Get photo path and album ID from intent
+        photoPath = getIntent().getStringExtra("photo_path");
+        albumId = getIntent().getStringExtra("album_id");
+        isTrash = getIntent().getBooleanExtra("isTrash", false);
+        if (photoPath == null) {
+            Toast.makeText(this, "Error loading image", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         // Initialize controllers
-        imageStorageController = new ImageStorageController(this);
+        albumController = new AlbumController(this);
         favoriteController = new FavoriteController(this);
+        imageStorageController = new ImageStorageController(this);
+        trashController = new TrashController(this);
 
         // Initialize views
         initializeViews();
 
-        // Get image path from intent
-        imagePath = getIntent().getStringExtra("imagePath");
-        if (imagePath != null) {
-            loadImage();
-            displayImageDetails();
-            updateFavoriteState();
-        } else {
-            Toast.makeText(this, "Error: No image path provided", Toast.LENGTH_SHORT).show();
-            finish();
-        }
-
         // Set click listeners
         setupClickListeners();
+
+        // Load image and details
+        loadImage();
+        loadImageDetails();
+        updateFavoriteState();
+        updateTrashButtons();
     }
 
     private void initializeViews() {
-        fullScreenImageView = findViewById(R.id.fullScreenImageView);
+        fullScreenImage = findViewById(R.id.fullScreenImage);
+        txtBack = findViewById(R.id.txtBack);
+        editButton = findViewById(R.id.editButton);
         favoriteButton = findViewById(R.id.favoriteButton);
+        addToAlbumButton = findViewById(R.id.addToAlbumButton);
         deleteButton = findViewById(R.id.deleteButton);
         resolutionTextView = findViewById(R.id.resolutionTextView);
         sizeTextView = findViewById(R.id.sizeTextView);
+        restoreButton = findViewById(R.id.restoreButton);
+        permanentDeleteButton = findViewById(R.id.permanentDeleteButton);
+    }
 
-        findViewById(R.id.txtBackFullScreenImage).setOnClickListener(v -> finish());
+    private void setupClickListeners() {
+        txtBack.setOnClickListener(v -> finish());
+
+        if (editButton != null) {
+            editButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, ImageEditActivity.class);
+                intent.putExtra("imagePath", photoPath);
+                startActivityForResult(intent, 1);
+            });
+        }
+
+        if (favoriteButton != null) {
+            favoriteButton.setOnClickListener(v -> toggleFavorite());
+        }
+
+        if (addToAlbumButton != null) {
+            addToAlbumButton.setOnClickListener(v -> showAlbumSelectionDialog());
+        }
+
+        if (deleteButton != null) {
+            deleteButton.setOnClickListener(v -> showDeleteConfirmationDialog());
+        }
+
+        if (restoreButton != null) {
+            restoreButton.setOnClickListener(v -> showRestoreConfirmationDialog());
+        }
+
+        if (permanentDeleteButton != null) {
+            permanentDeleteButton.setOnClickListener(v -> showPermanentDeleteConfirmationDialog());
+        }
+
+        // Add click listener for the image to toggle system UI visibility
+        fullScreenImage.setOnClickListener(v -> {
+            View decorView = getWindow().getDecorView();
+            int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+            decorView.setSystemUiVisibility(uiOptions);
+        });
+    }
+
+    private void updateTrashButtons() {
+        if (isTrash) {
+            // Hide normal buttons
+            if (editButton != null) editButton.setVisibility(View.GONE);
+            if (favoriteButton != null) favoriteButton.setVisibility(View.GONE);
+            if (addToAlbumButton != null) addToAlbumButton.setVisibility(View.GONE);
+            if (deleteButton != null) deleteButton.setVisibility(View.GONE);
+
+            // Show trash buttons
+            if (restoreButton != null) restoreButton.setVisibility(View.VISIBLE);
+            if (permanentDeleteButton != null) permanentDeleteButton.setVisibility(View.VISIBLE);
+        } else {
+            // Show normal buttons
+            if (editButton != null) editButton.setVisibility(View.VISIBLE);
+            if (favoriteButton != null) favoriteButton.setVisibility(View.VISIBLE);
+            if (addToAlbumButton != null) addToAlbumButton.setVisibility(View.VISIBLE);
+            if (deleteButton != null) deleteButton.setVisibility(View.VISIBLE);
+
+            // Hide trash buttons
+            if (restoreButton != null) restoreButton.setVisibility(View.GONE);
+            if (permanentDeleteButton != null) permanentDeleteButton.setVisibility(View.GONE);
+        }
     }
 
     private void loadImage() {
-        Glide.with(this)
-                .load(imagePath)
-                .into(fullScreenImageView);
+        Bitmap bitmap = BitmapFactory.decodeFile(photoPath);
+        if (bitmap != null) {
+            fullScreenImage.setImageBitmap(bitmap);
+        } else {
+            Toast.makeText(this, "Error loading image", Toast.LENGTH_SHORT).show();
+            finish();
+        }
     }
 
-    private void displayImageDetails() {
-        File imageFile = new File(imagePath);
-        if (imageFile.exists()) {
-            // Get image resolution
+    private void loadImageDetails() {
+        try {
+            // Get image dimensions
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
-            BitmapFactory.decodeFile(imagePath, options);
+            BitmapFactory.decodeFile(photoPath, options);
             String resolution = options.outWidth + "x" + options.outHeight;
             resolutionTextView.setText(resolution);
 
             // Get file size
-            long sizeInBytes = imageFile.length();
-            String size = formatFileSize(sizeInBytes);
-            sizeTextView.setText(size);
+            File file = new File(photoPath);
+            long sizeInBytes = file.length();
+            String sizeText = formatFileSize(sizeInBytes);
+            sizeTextView.setText(sizeText);
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Error loading image details", Toast.LENGTH_SHORT).show();
         }
     }
 
     private String formatFileSize(long sizeInBytes) {
-        if (sizeInBytes <= 0) return "0 B";
-        final String[] units = new String[]{"B", "KB", "MB", "GB", "TB"};
-        int digitGroups = (int) (Math.log10(sizeInBytes) / Math.log10(1024));
-        return new DecimalFormat("#,##0.#").format(sizeInBytes / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
-    }
-
-    private void updateFavoriteState() {
-        isFavorite = favoriteController.isFavorite(imagePath);
-        favoriteButton.setImageResource(isFavorite ? R.drawable.heart_filled : R.drawable.heart);
-    }
-
-    private void setupClickListeners() {
-        // Favorite button click listener
-        favoriteButton.setOnClickListener(v -> {
-            isFavorite = !isFavorite;
-            if (isFavorite) {
-                favoriteController.addFavorite(imagePath);
-                Toast.makeText(this, "Added to favorites", Toast.LENGTH_SHORT).show();
-            } else {
-                favoriteController.removeFavorite(imagePath);
-                Toast.makeText(this, "Removed from favorites", Toast.LENGTH_SHORT).show();
-            }
-            updateFavoriteState();
-        });
-
-        // Delete button click listener
-        deleteButton.setOnClickListener(v -> {
-            new AlertDialog.Builder(this)
-                    .setTitle("Delete Image")
-                    .setMessage("Are you sure you want to delete this image?")
-                    .setPositiveButton("Delete", (dialog, which) -> {
-                        deleteImage();
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
-        });
-
-        // Edit button click listener
-        findViewById(R.id.editButton).setOnClickListener(v -> {
-            editImage();
-        });
-    }
-
-    private void deleteImage() {
-        File file = new File(imagePath);
-        if (file.exists()) {
-            if (file.delete()) {
-                // Remove from favorites if it was favorited
-                if (favoriteController.isFavorite(imagePath)) {
-                    favoriteController.removeFavorite(imagePath);
-                }
-                Toast.makeText(this, "Image deleted successfully", Toast.LENGTH_SHORT).show();
-                setResult(RESULT_OK);
-                finish();
-            } else {
-                Toast.makeText(this, "Failed to delete image", Toast.LENGTH_SHORT).show();
-            }
+        if (sizeInBytes < 1024) {
+            return sizeInBytes + " B";
+        } else if (sizeInBytes < 1024 * 1024) {
+            return String.format("%.1f KB", sizeInBytes / 1024.0);
+        } else {
+            return String.format("%.1f MB", sizeInBytes / (1024.0 * 1024.0));
         }
     }
 
-    private void editImage() {
-        Intent intent = new Intent(this, ImageEditActivity.class);
-        intent.putExtra("imagePath", imagePath);
-        startActivityForResult(intent, 2);
+    private void updateFavoriteState() {
+        isFavorite = favoriteController.isFavorite(photoPath);
+        favoriteButton.setImageResource(isFavorite ? R.drawable.heart_filled : R.drawable.heart);
+    }
+
+    private void toggleFavorite() {
+        if (isFavorite) {
+            favoriteController.removeFavorite(photoPath);
+        } else {
+            favoriteController.addFavorite(photoPath);
+        }
+        isFavorite = !isFavorite;
+        favoriteButton.setImageResource(isFavorite ? R.drawable.heart_filled : R.drawable.heart);
+    }
+
+    private void showDeleteConfirmationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Xóa ảnh")
+                .setMessage("Bạn có chắc chắn muốn xóa ảnh này?")
+                .setPositiveButton("Xóa", (dialog, which) -> deleteImage())
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void deleteImage() {
+        if (albumId != null) {
+            // Delete from album
+            albumController.removePhotoFromAlbum(albumId, photoPath);
+        } else {
+            // Move to trash instead of permanent delete
+            trashController.addToTrash(photoPath);
+            // Remove from favorites if it's a favorite
+            if (favoriteController.isFavorite(photoPath)) {
+                favoriteController.removeFavorite(photoPath);
+            }
+            // Remove from albums if it's in any album
+            List<Album> albums = albumController.getAllAlbums();
+            for (Album album : albums) {
+                if (album.getPhotoPaths().contains(photoPath)) {
+                    albumController.removePhotoFromAlbum(album.getId(), photoPath);
+                }
+            }
+        }
+        
+        // Set result to notify AllPhotoActivity to refresh
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra("deleted_photo_path", photoPath);
+        setResult(RESULT_OK, resultIntent);
+        finish();
+    }
+
+    private void showRestoreConfirmationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Khôi phục ảnh")
+                .setMessage("Bạn có chắc chắn muốn khôi phục ảnh này?")
+                .setPositiveButton("Khôi phục", (dialog, which) -> restoreImage())
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void showPermanentDeleteConfirmationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Xóa vĩnh viễn")
+                .setMessage("Bạn có chắc chắn muốn xóa vĩnh viễn ảnh này?")
+                .setPositiveButton("Xóa", (dialog, which) -> permanentlyDeleteImage())
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void restoreImage() {
+        if (trashController.restoreImage(photoPath)) {
+            Toast.makeText(this, "Đã khôi phục ảnh", Toast.LENGTH_SHORT).show();
+            setResult(RESULT_OK);
+            finish();
+        } else {
+            Toast.makeText(this, "Không thể khôi phục ảnh", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void permanentlyDeleteImage() {
+        if (trashController.permanentlyDeleteImage(photoPath)) {
+            Toast.makeText(this, "Đã xóa vĩnh viễn ảnh", Toast.LENGTH_SHORT).show();
+            setResult(RESULT_OK);
+            finish();
+        } else {
+            Toast.makeText(this, "Không thể xóa ảnh", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showAlbumSelectionDialog() {
+        List<Album> albums = albumController.getAllAlbums();
+        if (albums.isEmpty()) {
+            Toast.makeText(this, "Không có album nào", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String[] albumNames = new String[albums.size()];
+        for (int i = 0; i < albums.size(); i++) {
+            albumNames[i] = albums.get(i).getTitle();
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("Chọn album")
+                .setItems(albumNames, (dialog, which) -> {
+                    Album selectedAlbum = albums.get(which);
+                    Bitmap bitmap = BitmapFactory.decodeFile(photoPath);
+                    if (bitmap != null) {
+                        albumController.addPhotoToAlbum(selectedAlbum.getId(), bitmap);
+                        Toast.makeText(this, "Đã thêm ảnh vào album " + selectedAlbum.getTitle(), Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Không thể thêm ảnh vào album", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 2 && resultCode == RESULT_OK) {
-            // Get the edited image path from the result
-            String editedImagePath = data.getStringExtra("editedImagePath");
-            if (editedImagePath != null) {
-                // Update the image path and reload the image
-                imagePath = editedImagePath;
-                loadImage();
-                displayImageDetails();
-                
-                // Pass the edited image path back to AllPhotoActivity
-                Intent resultIntent = new Intent();
-                resultIntent.putExtra("editedImagePath", editedImagePath);
-                setResult(RESULT_OK, resultIntent);
-            }
+        if (requestCode == 1 && resultCode == RESULT_OK) {
+            // Reload image after editing
+            loadImage();
+            loadImageDetails();
         }
     }
 }

@@ -1,29 +1,37 @@
 package com.example.photobooth.adapter;
 
 import android.content.Context;
-import android.graphics.Point;
-import android.view.Display;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.example.photobooth.R;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class AlbumAdapter extends BaseAdapter {
     private Context context;
-    private List<Map<String, String>> items; // Danh sách dữ liệu
+    private List<Map<String, String>> items;
+    private Set<Integer> selectedItems;
+    private boolean isMultiSelect;
 
     public AlbumAdapter(Context context, List<Map<String, String>> items) {
+        this(context, items, new HashSet<>(), false);
+    }
+
+    public AlbumAdapter(Context context, List<Map<String, String>> items, Set<Integer> selectedItems, boolean isMultiSelect) {
         this.context = context;
         this.items = items;
+        this.selectedItems = selectedItems;
+        this.isMultiSelect = isMultiSelect;
     }
 
     @Override
@@ -43,54 +51,72 @@ public class AlbumAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder holder;
-
         if (convertView == null) {
-            LayoutInflater inflater = LayoutInflater.from(context);
-            convertView = inflater.inflate(R.layout.grid_album_item, parent, false);
-
-            holder = new ViewHolder();
-            holder.imageView = convertView.findViewById(R.id.item_image);
-            holder.textView = convertView.findViewById(R.id.item_text);
-
-            convertView.setTag(holder);
-        } else {
-            holder = (ViewHolder) convertView.getTag();
+            convertView = LayoutInflater.from(context).inflate(R.layout.grid_album_item, parent, false);
         }
 
         Map<String, String> item = items.get(position);
-        if (item != null) {
-            holder.textView.setText(item.get("title"));
+        String title = item.get("title");
+        String imgUrl = item.get("imgUrl");
 
-            String imageUrl = item.get("imgUrl");
-            if (imageUrl != null && !imageUrl.isEmpty()) {
-                Glide.with(context)
-                        .load(imageUrl)
-                        // ... các tùy chọn khác
-                        .into(holder.imageView);
-            } else {
-                holder.imageView.setImageResource(R.drawable.logo);
+        TextView titleTextView = convertView.findViewById(R.id.item_text);
+        ImageView albumCoverImageView = convertView.findViewById(R.id.item_image);
+        View selectionOverlay = convertView.findViewById(R.id.selection_overlay);
+
+        titleTextView.setText(title);
+
+        if (imgUrl != null) {
+            try {
+                Bitmap bitmap = BitmapFactory.decodeFile(imgUrl);
+                if (bitmap != null) {
+                    albumCoverImageView.setImageBitmap(bitmap);
+                } else {
+                    albumCoverImageView.setImageResource(R.drawable.default_album_cover);
+                }
+            } catch (Exception e) {
+                albumCoverImageView.setImageResource(R.drawable.default_album_cover);
             }
+        } else {
+            albumCoverImageView.setImageResource(R.drawable.default_album_cover);
         }
 
-        // Thiết lập kích thước động để phù hợp với GridView
-        int displayWidth = getScreenWidth() / 2; // Chia đôi màn hình
-        holder.imageView.getLayoutParams().width = displayWidth - 32; // Trừ padding
-        holder.imageView.getLayoutParams().height = displayWidth - 32;
+        // Handle selection state
+        if (isMultiSelect) {
+            selectionOverlay.setVisibility(selectedItems.contains(position) ? View.VISIBLE : View.GONE);
+        } else {
+            selectionOverlay.setVisibility(View.GONE);
+        }
 
         return convertView;
     }
 
-    private int getScreenWidth() {
-        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        Display display = windowManager.getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        return size.x;
+    public void toggleSelection(int position) {
+        if (selectedItems.contains(position)) {
+            selectedItems.remove(position);
+        } else {
+            selectedItems.add(position);
+        }
+        notifyDataSetChanged();
     }
 
-    static class ViewHolder {
-        ImageView imageView;
-        TextView textView;
+    public void clearSelection() {
+        selectedItems.clear();
+        notifyDataSetChanged();
+    }
+
+    public Set<Integer> getSelectedItems() {
+        return selectedItems;
+    }
+
+    public void setMultiSelect(boolean isMultiSelect) {
+        this.isMultiSelect = isMultiSelect;
+        if (!isMultiSelect) {
+            clearSelection();
+        }
+        notifyDataSetChanged();
+    }
+
+    public boolean isMultiSelect() {
+        return isMultiSelect;
     }
 }

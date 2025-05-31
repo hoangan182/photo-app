@@ -4,6 +4,7 @@ public class User {
     private String id;
     private String username;
     private String email;
+    private String avatar; // URL của avatar
     //    private String password;
     private long created_at;
     private long updated_at;
@@ -45,6 +46,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 
 //    public String getPassword() {
