@@ -1,10 +1,12 @@
 package com.example.photobooth.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ExifInterface;
 import android.os.Bundle;
+import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -55,6 +57,7 @@ public class FullScreenImageActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        this.setTheme(R.style.Theme_PhotoBoothLogin);
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_full_screen_image);
@@ -232,6 +235,7 @@ public class FullScreenImageActivity extends AppCompatActivity {
                 .setNegativeButton("Hủy", null)
                 .show();
     }
+
 
     private void deleteImage() {
         if (albumId != null) {

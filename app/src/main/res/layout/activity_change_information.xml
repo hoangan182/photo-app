@@ -11,37 +11,30 @@
     <FrameLayout
         android:id="@+id/frameLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#FBFAFA"
+        android:layout_height="58dp"
+        android:gravity="center"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/txtBackChangeInfo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
-            android:background="?attr/selectableItemBackground"
-            android:drawablePadding="8dp"
-            android:padding="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:drawableLeft="@drawable/baseline_arrow_back_ios_new_24"
             android:text="Quay lại"
-            android:textColor="#615D5D"
-            app:drawableStartCompat="@drawable/baseline_arrow_back_24" />
+            android:textSize="16sp" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
             android:text="Thay đổi thông tin"
-            android:textColor="#615D5D"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textColor="#666363"
+            android:textSize="20sp"
+            android:textStyle="bold"  />
     </FrameLayout>
 
     <androidx.cardview.widget.CardView

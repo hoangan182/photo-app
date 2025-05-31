@@ -34,14 +34,17 @@
             android:text="Tên Album"
             android:textColor="#383434"
             android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:singleLine="true"/>
 
         <ImageView
             android:id="@+id/menuButton"
-            android:layout_width="wrap_content"
+            android:layout_width="8dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="20dp"
-            android:padding="8dp"
+            android:layout_weight="1"
+            android:layout_gravity="center|left"
             android:src="@drawable/baseline_more_vert_24"
             android:contentDescription="Menu" />
 
