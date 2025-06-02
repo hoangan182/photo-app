@@ -39,6 +39,7 @@ public class PhotoGroupAdapter extends BaseAdapter {
 
     public interface OnPhotoSelectionListener {
         void onPhotoSelected(PhotoItem photo, boolean isSelected);
+        void onPhotoLongClick(PhotoItem photo);
     }
 
     public void setOnPhotoSelectionListener(OnPhotoSelectionListener listener) {
@@ -151,6 +152,7 @@ public class PhotoGroupAdapter extends BaseAdapter {
                 togglePhotoSelection(photo);
                 if (selectionListener != null) {
                     selectionListener.onPhotoSelected(photo, true);
+                    selectionListener.onPhotoLongClick(photo);
                 }
             }
             return true;

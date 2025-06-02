@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.method.HideReturnsTransformationMethod;
+import android.text.method.PasswordTransformationMethod;
 import android.view.View;
 import android.util.Log;
 import com.google.gson.Gson;
@@ -88,6 +90,33 @@ public class SignUpActivity extends Activity {
 
         txtLogin1.setOnClickListener(v -> finish());
 
+        // Xử lý hiện/ẩn mật khẩu
+        imgShowSignUpPassword.setOnClickListener(v -> {
+            if (isSignUpPasswordVisible) {
+                edtPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                imgShowSignUpPassword.setImageResource(R.drawable.show_password);
+                isSignUpPasswordVisible = false;
+            } else {
+                edtPassword.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
+                imgShowSignUpPassword.setImageResource(R.drawable.hide_password);
+                isSignUpPasswordVisible = true;
+            }
+            edtPassword.setSelection(edtPassword.getText().length());
+        });
+
+        imgShowRetypePassword.setOnClickListener(v -> {
+            if (isRetypePasswordVisible) {
+                edtRetypePassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                imgShowRetypePassword.setImageResource(R.drawable.show_password);
+                isRetypePasswordVisible = false;
+            } else {
+                edtRetypePassword.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
+                imgShowRetypePassword.setImageResource(R.drawable.hide_password);
+                isRetypePasswordVisible = true;
+            }
+            edtRetypePassword.setSelection(edtRetypePassword.getText().length());
+        });
+
         btnSignUp.setOnClickListener(v -> performSignUp());
     }
 
@@ -140,54 +169,21 @@ public class SignUpActivity extends Activity {
             loadingDialog.dismiss();
 
             if (task.isSuccessful()) {
-                Toast.makeText(SignUpActivity.this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
-                // Navigate to login screen
-                Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-                finish();
+                showResultDialog("Thành công", "Đăng ký thành công!", true);
             } else {
                 String errorMessage = task.getException() != null ?
                         task.getException().getMessage() : "Đăng ký thất bại";
-                showDialog("Lỗi", errorMessage);
-            }
-        });
-
-
-        imgShowSignUpPassword.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (isSignUpPasswordVisible) {
-                    // Ẩn mật khẩu
-                    edtPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                    imgShowSignUpPassword.setImageResource(R.drawable.show_password);
-                } else {
-                    // Hiện mật khẩu
-                    edtPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                    imgShowSignUpPassword.setImageResource(R.drawable.hide_password);
+                if (errorMessage.contains("already in use")) {
+                    errorMessage = "Email đã được sử dụng";
+                } else if (errorMessage.contains("badly formatted")) {
+                    errorMessage = "Email không hợp lệ";
+                } else if (errorMessage.contains("weak-password")) {
+                    errorMessage = "Mật khẩu quá yếu";
                 }
-                isSignUpPasswordVisible = !isSignUpPasswordVisible;
-                edtPassword.setSelection(edtPassword.getText().length());
+                showResultDialog("Lỗi", errorMessage, false);
             }
         });
-
-        imgShowRetypePassword.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (isRetypePasswordVisible) {
-                    // Ẩn mật khẩu
-                    edtRetypePassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                    imgShowRetypePassword.setImageResource(R.drawable.show_password);
-                } else {
-                    // Hiện mật khẩu
-                    edtRetypePassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                    imgShowRetypePassword.setImageResource(R.drawable.hide_password);
-                }
-                isRetypePasswordVisible = !isRetypePasswordVisible;
-                edtRetypePassword.setSelection(edtRetypePassword.getText().length());
-            }
-        });
-        }
+    }
 
     private void showDialog(String title, String message) {
         new AlertDialog.Builder(SignUpActivity.this)
@@ -195,5 +191,20 @@ public class SignUpActivity extends Activity {
                 .setMessage(message)
                 .setPositiveButton("OK", null)
                 .show();
+    }
+
+    private void showResultDialog(String title, String message, boolean isSuccess) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title)
+               .setMessage(message)
+               .setPositiveButton("OK", (dialog, which) -> {
+                   if (isSuccess) {
+                       Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
+                       intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                       startActivity(intent);
+                       finish();
+                   }
+               });
+        builder.create().show();
     }
 }

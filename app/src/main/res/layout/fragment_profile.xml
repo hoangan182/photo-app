@@ -80,7 +80,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
-        android:backgroundTint="#FF5252"
+        android:backgroundTint="#C451D5"
         android:text="Đăng xuất"
         android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"

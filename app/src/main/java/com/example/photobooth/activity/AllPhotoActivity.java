@@ -49,11 +49,13 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
     private AlbumController albumController;
     private PhotoGroupAdapter photoAdapter;
     private android.view.ActionMode actionMode;
+    private View topBarLayout;
 
     private final android.view.ActionMode.Callback actionModeCallback = new android.view.ActionMode.Callback() {
         @Override
         public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
             mode.getMenuInflater().inflate(R.menu.menu_photo_selection, menu);
+            toggleTopBar(false);
             return true;
         }
 
@@ -78,6 +80,7 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
         public void onDestroyActionMode(android.view.ActionMode mode) {
             photoAdapter.setMultiSelect(false);
             actionMode = null;
+            toggleTopBar(true);
         }
     };
 
@@ -122,6 +125,7 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
         noAllImageLayout = findViewById(R.id.noAllImageLayout);
         imgShowOption = findViewById(R.id.imgShowOptionAllPhoto);
         txtBackAllPhoto = findViewById(R.id.txtBackAllPhoto);
+        topBarLayout = findViewById(R.id.topBarLayout);
 
         // Set initial visibility
         if (listViewAll != null) {
@@ -366,10 +370,18 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
     }
 
     private void createNewAlbum(String albumName, List<PhotoItem> selectedPhotos) {
-        // Create new album
-        Album album = albumController.createAlbum(albumName, "", null);
+        if (selectedPhotos.isEmpty()) {
+            return;
+        }
+
+        // Get first photo as cover
+        PhotoItem firstPhoto = selectedPhotos.get(0);
+        Bitmap coverBitmap = BitmapFactory.decodeFile(firstPhoto.getPath());
         
-        // Add selected photos to album
+        // Create new album with cover image
+        Album album = albumController.createAlbum(albumName, "", coverBitmap);
+        
+        // Add all selected photos to album
         for (PhotoItem photo : selectedPhotos) {
             Bitmap bitmap = BitmapFactory.decodeFile(photo.getPath());
             if (bitmap != null) {
@@ -383,5 +395,20 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
         }
         
         Toast.makeText(this, "Đã tạo album " + albumName + " với " + selectedPhotos.size() + " ảnh", Toast.LENGTH_SHORT).show();
+    }
+
+    private void toggleTopBar(boolean show) {
+        if (topBarLayout != null) {
+            topBarLayout.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    @Override
+    public void onPhotoLongClick(PhotoItem photo) {
+        if (actionMode == null) {
+            photoAdapter.setMultiSelect(true);
+            actionMode = startActionMode(actionModeCallback);
+            toggleTopBar(false);
+        }
     }
 }

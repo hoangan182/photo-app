@@ -116,20 +116,9 @@ public class LoginActivity extends AppCompatActivity {
                     .addOnCompleteListener(task -> {
                         loadingDialog.dismiss();
                         if (task.isSuccessful()) {
-                            Toast.makeText(LoginActivity.this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-                            finish();
+                            showResultDialog("Thành công", "Đăng nhập thành công", true);
                         } else {
-                            String errorMessage = task.getException() != null ? 
-                                task.getException().getMessage() : "Đăng nhập thất bại";
-                            if (errorMessage.contains("no user record")) {
-                                errorMessage = "Email chưa được đăng ký";
-                            } else if (errorMessage.contains("password is invalid")) {
-                                errorMessage = "Mật khẩu không đúng";
-                            }
-                            Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                            showResultDialog("Lỗi", "Email hoặc mật khẩu không chính xác", false);
                         }
                     });
         });
@@ -148,5 +137,20 @@ public class LoginActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finish();
+    }
+
+    private void showResultDialog(String title, String message, boolean isSuccess) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title)
+               .setMessage(message)
+               .setPositiveButton("OK", (dialog, which) -> {
+                   if (isSuccess) {
+                       Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                       intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                       startActivity(intent);
+                       finish();
+                   }
+               });
+        builder.create().show();
     }
 }
