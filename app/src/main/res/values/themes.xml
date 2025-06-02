@@ -4,6 +4,10 @@
     <style name="Base.Theme.PhotoBoothLogin" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
+        <item name="colorSurface">#FFFFFF</item>Add commentMore actions
+        <item name="colorOnSurface">#000000</item>
+
         <item name="actionBarTheme">@style/Theme.PhotoBooth.ActionBar</item>
     </style>
 

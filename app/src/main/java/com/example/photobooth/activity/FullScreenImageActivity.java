@@ -55,6 +55,7 @@ public class FullScreenImageActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        this.setTheme(R.style.Theme_PhotoBoothLogin);
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_full_screen_image);

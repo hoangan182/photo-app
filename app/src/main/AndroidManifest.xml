@@ -75,7 +75,9 @@
         <activity
             android:name=".activity.MainActivity"
             android:exported="false" />
-        <activity android:name=".activity.ImageEditActivity" />
+        <activity
+            android:name=".activity.ImageEditActivity"
+            android:exported="false" />
 
     </application>
 
