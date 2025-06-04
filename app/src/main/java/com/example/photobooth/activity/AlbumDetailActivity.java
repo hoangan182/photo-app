@@ -53,25 +53,59 @@ public class AlbumDetailActivity extends AppCompatActivity {
                     if (result.getData().getClipData() != null) {
                         // Multiple images selected
                         int count = result.getData().getClipData().getItemCount();
+                        int[] successCount = {0};
                         for (int i = 0; i < count; i++) {
                             Uri imageUri = result.getData().getClipData().getItemAt(i).getUri();
                             try {
                                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
-                                albumController.addPhotoToAlbum(albumId, bitmap);
+                                albumController.addPhotoToAlbum(albumId, bitmap, new AlbumController.OnPhotoAddedListener() {
+                                    @Override
+                                    public void onSuccess() {
+                                        successCount[0]++;
+                                        if (successCount[0] == count) {
+                                            runOnUiThread(() -> {
+                                                loadAlbumDetails();
+                                                Toast.makeText(AlbumDetailActivity.this, "Đã thêm " + count + " ảnh vào album", Toast.LENGTH_SHORT).show();
+                                            });
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(String error) {
+                                        successCount[0]++;
+                                        if (successCount[0] == count) {
+                                            runOnUiThread(() -> {
+                                                loadAlbumDetails();
+                                                Toast.makeText(AlbumDetailActivity.this, "Đã thêm " + count + " ảnh vào album", Toast.LENGTH_SHORT).show();
+                                            });
+                                        }
+                                    }
+                                });
                             } catch (IOException e) {
                                 Toast.makeText(this, "Không thể thêm ảnh " + (i + 1), Toast.LENGTH_SHORT).show();
                             }
                         }
-                        loadAlbumDetails(); // Reload album after adding photos
-                        Toast.makeText(this, "Đã thêm " + count + " ảnh vào album", Toast.LENGTH_SHORT).show();
                     } else if (result.getData().getData() != null) {
                         // Single image selected
                         Uri imageUri = result.getData().getData();
                         try {
                             Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
-                            albumController.addPhotoToAlbum(albumId, bitmap);
-                            loadAlbumDetails(); // Reload album after adding photo
-                            Toast.makeText(this, "Đã thêm ảnh vào album", Toast.LENGTH_SHORT).show();
+                            albumController.addPhotoToAlbum(albumId, bitmap, new AlbumController.OnPhotoAddedListener() {
+                                @Override
+                                public void onSuccess() {
+                                    runOnUiThread(() -> {
+                                        loadAlbumDetails();
+                                        Toast.makeText(AlbumDetailActivity.this, "Đã thêm ảnh vào album", Toast.LENGTH_SHORT).show();
+                                    });
+                                }
+
+                                @Override
+                                public void onFailure(String error) {
+                                    runOnUiThread(() -> {
+                                        Toast.makeText(AlbumDetailActivity.this, "Không thể thêm ảnh: " + error, Toast.LENGTH_SHORT).show();
+                                    });
+                                }
+                            });
                         } catch (IOException e) {
                             Toast.makeText(this, "Không thể thêm ảnh", Toast.LENGTH_SHORT).show();
                         }
@@ -221,5 +255,52 @@ public class AlbumDetailActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadAlbumDetails(); // Reload when returning from other activities
+    }
+
+    private void addImageToAlbum(Uri imageUri) {
+        try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+            albumController.addPhotoToAlbum(albumId, bitmap, new AlbumController.OnPhotoAddedListener() {
+                @Override
+                public void onSuccess() {
+                    runOnUiThread(() -> {
+                        Toast.makeText(AlbumDetailActivity.this, "Đã thêm ảnh vào album", Toast.LENGTH_SHORT).show();
+                        loadAlbumDetails();
+                    });
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(AlbumDetailActivity.this, "Không thể thêm ảnh: " + error, Toast.LENGTH_SHORT).show();
+                    });
+                }
+            });
+        } catch (IOException e) {
+            Toast.makeText(this, "Không thể đọc ảnh", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void handleCameraImage(Intent data) {
+        Bundle extras = data.getExtras();
+        if (extras != null) {
+            Bitmap bitmap = (Bitmap) extras.get("data");
+            albumController.addPhotoToAlbum(albumId, bitmap, new AlbumController.OnPhotoAddedListener() {
+                @Override
+                public void onSuccess() {
+                    runOnUiThread(() -> {
+                        Toast.makeText(AlbumDetailActivity.this, "Đã thêm ảnh vào album", Toast.LENGTH_SHORT).show();
+                        loadAlbumDetails();
+                    });
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(AlbumDetailActivity.this, "Không thể thêm ảnh: " + error, Toast.LENGTH_SHORT).show();
+                    });
+                }
+            });
+        }
     }
 } 

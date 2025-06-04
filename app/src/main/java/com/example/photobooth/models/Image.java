@@ -1,28 +1,59 @@
 package com.example.photobooth.models;
 
-public class Image {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Image implements Parcelable {
     private String id;
     private String url;
-    private String type;
+    private long capturedAt;
+    private long createdAt;
+    private long updatedAt;
     private long size;
-    private String caption;
-    private long created_at;
-    private long updated_at;
+    private String type;
+    private String metadata;
+    private boolean deleted;
 
     // Constructor rỗng (cần thiết cho Firebase)
     public Image() {
     }
 
     // Constructor đầy đủ
-    public Image(String id, String url, String type, long size, String caption, long created_at, long updated_at) {
+    public Image(String id, String url, long capturedAt, long createdAt, long updatedAt, long size, String type, String metadata) {
         this.id = id;
         this.url = url;
-        this.type = type;
+        this.capturedAt = capturedAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.size = size;
-        this.caption = caption;
-        this.created_at = created_at;
-        this.updated_at = updated_at;
+        this.type = type;
+        this.metadata = metadata;
+        this.deleted = false;
     }
+
+    protected Image(Parcel in) {
+        id = in.readString();
+        url = in.readString();
+        capturedAt = in.readLong();
+        createdAt = in.readLong();
+        updatedAt = in.readLong();
+        size = in.readLong();
+        type = in.readString();
+        metadata = in.readString();
+        deleted = in.readByte() != 0;
+    }
+
+    public static final Creator<Image> CREATOR = new Creator<Image>() {
+        @Override
+        public Image createFromParcel(Parcel in) {
+            return new Image(in);
+        }
+
+        @Override
+        public Image[] newArray(int size) {
+            return new Image[size];
+        }
+    };
 
     // Getters & Setters
     public String getId() {
@@ -41,12 +72,28 @@ public class Image {
         this.url = url;
     }
 
-    public String getType() {
-        return type;
+    public long getCapturedAt() {
+        return capturedAt;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setCapturedAt(long capturedAt) {
+        this.capturedAt = capturedAt;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(long createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(long updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public long getSize() {
@@ -57,28 +104,46 @@ public class Image {
         this.size = size;
     }
 
-    public String getCaption() {
-        return caption;
+    public String getType() {
+        return type;
     }
 
-    public void setCaption(String caption) {
-        this.caption = caption;
+    public void setType(String type) {
+        this.type = type;
     }
 
-    public long getCreated_at() {
-        return created_at;
+    public String getMetadata() {
+        return metadata;
     }
 
-    public void setCreated_at(long created_at) {
-        this.created_at = created_at;
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
     }
 
-    public long getUpdated_at() {
-        return updated_at;
+    public boolean isDeleted() {
+        return deleted;
     }
 
-    public void setUpdated_at(long updated_at) {
-        this.updated_at = updated_at;
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(id);
+        dest.writeString(url);
+        dest.writeLong(capturedAt);
+        dest.writeLong(createdAt);
+        dest.writeLong(updatedAt);
+        dest.writeLong(size);
+        dest.writeString(type);
+        dest.writeString(metadata);
+        dest.writeByte((byte) (deleted ? 1 : 0));
     }
 
     @Override
@@ -88,9 +153,11 @@ public class Image {
                 ", url='" + url + '\'' +
                 ", type='" + type + '\'' +
                 ", size=" + size +
-                ", caption='" + caption + '\'' +
-                ", created_at=" + created_at +
-                ", updated_at=" + updated_at +
+                ", capturedAt=" + capturedAt +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", metadata='" + metadata + '\'' +
+                ", deleted=" + deleted +
                 '}';
     }
 }

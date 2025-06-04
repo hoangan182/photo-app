@@ -17,6 +17,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.example.photobooth.R;
 import com.example.photobooth.controllers.AlbumController;
 import com.example.photobooth.controllers.FavoriteController;
@@ -30,6 +33,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+import android.graphics.drawable.Drawable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class FullScreenImageActivity extends AppCompatActivity {
 
@@ -310,20 +317,53 @@ public class FullScreenImageActivity extends AppCompatActivity {
             albumNames[i] = albums.get(i).getTitle();
         }
 
-        new AlertDialog.Builder(this)
-                .setTitle("Chọn album")
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Chọn album")
                 .setItems(albumNames, (dialog, which) -> {
                     Album selectedAlbum = albums.get(which);
-                    Bitmap bitmap = BitmapFactory.decodeFile(photoPath);
-                    if (bitmap != null) {
-                        albumController.addPhotoToAlbum(selectedAlbum.getId(), bitmap);
-                        Toast.makeText(this, "Đã thêm ảnh vào album " + selectedAlbum.getTitle(), Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(this, "Không thể thêm ảnh vào album", Toast.LENGTH_SHORT).show();
-                    }
+                    addToAlbum(selectedAlbum);
                 })
-                .setNegativeButton("Hủy", null)
-                .show();
+                .setNegativeButton("Hủy", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.black);
+        dialog.show();
+    }
+
+    private void addToAlbum(Album selectedAlbum) {
+        if (photoPath == null) {
+            Toast.makeText(this, "Không thể thêm ảnh vào album", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Glide.with(this)
+            .asBitmap()
+            .load(photoPath)
+            .into(new CustomTarget<Bitmap>() {
+                @Override
+                public void onResourceReady(@NonNull Bitmap bitmap, @Nullable Transition<? super Bitmap> transition) {
+                    albumController.addPhotoToAlbum(selectedAlbum.getId(), bitmap, new AlbumController.OnPhotoAddedListener() {
+                        @Override
+                        public void onSuccess() {
+                            runOnUiThread(() -> {
+                                Toast.makeText(FullScreenImageActivity.this, "Đã thêm ảnh vào album", Toast.LENGTH_SHORT).show();
+                            });
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            runOnUiThread(() -> {
+                                Toast.makeText(FullScreenImageActivity.this, "Không thể thêm ảnh: " + error, Toast.LENGTH_SHORT).show();
+                            });
+                        }
+                    });
+                }
+
+                @Override
+                public void onLoadCleared(@Nullable Drawable placeholder) {
+                    Toast.makeText(FullScreenImageActivity.this, "Không thể tải ảnh", Toast.LENGTH_SHORT).show();
+                }
+            });
     }
 
     @Override

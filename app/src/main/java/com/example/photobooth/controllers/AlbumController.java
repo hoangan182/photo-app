@@ -7,9 +7,14 @@ import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import com.example.photobooth.models.Album;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,6 +35,9 @@ public class AlbumController {
     private final Gson gson;
     private final File albumCoversDir;
     private final File albumPhotosDir;
+    private final FirebaseFirestore db;
+    private final FirebaseStorage storage;
+    private final StorageReference storageRef;
 
     public AlbumController(Context context) {
         this.context = context;
@@ -46,26 +54,50 @@ public class AlbumController {
         if (!albumPhotosDir.exists()) {
             albumPhotosDir.mkdirs();
         }
+
+        this.db = FirebaseFirestore.getInstance();
+        this.storage = FirebaseStorage.getInstance();
+        this.storageRef = storage.getReference();
     }
 
-    public Album createAlbum(String title, String description, Bitmap coverImage) {
-        String id = UUID.randomUUID().toString();
+    public void createAlbum(String title, String description, Bitmap coverImage, OnAlbumCreatedListener listener) {
+        String albumId = UUID.randomUUID().toString();
         long currentTime = System.currentTimeMillis();
         
-        Album album = new Album(id, title, description, currentTime, currentTime);
+        Album album = new Album(albumId, title, description, currentTime, currentTime);
         
-        // Save album cover image if provided
+        // Upload cover image if provided
         if (coverImage != null) {
-            String coverPath = saveAlbumCover(coverImage, id);
-            album.setCoverPath(coverPath);
+            uploadImage(coverImage, "album_covers/" + albumId + ".jpg", new OnImageUploadedListener() {
+                @Override
+                public void onSuccess(String imageUrl) {
+                    album.setCoverPath(imageUrl);
+                    saveAlbumToFirestore(album, listener);
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Log.e(TAG, "Failed to upload cover image: " + error);
+                    listener.onFailure("Failed to upload cover image");
+                }
+            });
+        } else {
+            saveAlbumToFirestore(album, listener);
         }
-        
-        // Save album to preferences
-        List<Album> albums = getAllAlbums();
-        albums.add(album);
-        saveAlbums(albums);
-        
-        return album;
+    }
+
+    private void saveAlbumToFirestore(Album album, OnAlbumCreatedListener listener) {
+        db.collection("albums")
+            .document(album.getId())
+            .set(album)
+            .addOnSuccessListener(aVoid -> {
+                Log.d(TAG, "Album created successfully: " + album.getId());
+                listener.onSuccess(album);
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error creating album", e);
+                listener.onFailure("Failed to create album: " + e.getMessage());
+            });
     }
 
     public List<Album> getAllAlbums() {
@@ -111,10 +143,13 @@ public class AlbumController {
     }
 
     private String saveAlbumCover(Bitmap coverImage, String albumId) {
+        try {
         File coverFile = new File(albumCoversDir, albumId + ".jpg");
         try (FileOutputStream out = new FileOutputStream(coverFile)) {
             coverImage.compress(Bitmap.CompressFormat.JPEG, 90, out);
+                Log.d(TAG, "Saved cover: " + coverFile.getAbsolutePath());
             return coverFile.getAbsolutePath();
+            }
         } catch (IOException e) {
             Log.e(TAG, "Error saving album cover", e);
             return null;
@@ -136,17 +171,51 @@ public class AlbumController {
         return null;
     }
 
-    public void addPhotoToAlbum(String albumId, Bitmap photo) {
-        Album album = getAlbumById(albumId);
-        if (album == null) return;
+    public void addPhotoToAlbum(String albumId, Bitmap photo, OnPhotoAddedListener listener) {
+        uploadImage(photo, "album_photos/" + albumId + "/" + System.currentTimeMillis() + ".jpg", new OnImageUploadedListener() {
+            @Override
+            public void onSuccess(String imageUrl) {
+                db.collection("albums")
+                    .document(albumId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        Album album = documentSnapshot.toObject(Album.class);
+                        if (album != null) {
+                            List<String> photoPaths = album.getPhotoPaths();
+                            if (photoPaths == null) {
+                                photoPaths = new ArrayList<>();
+                            }
+                            photoPaths.add(imageUrl);
+                            album.setPhotoPaths(photoPaths);
+                            album.setUpdated_at(System.currentTimeMillis());
 
-        // Save photo to file
-        String photoPath = saveAlbumPhoto(photo, albumId);
-        if (photoPath != null) {
-            album.addPhoto(photoPath);
-            album.setUpdated_at(System.currentTimeMillis());
-            updateAlbum(album);
-        }
+                            db.collection("albums")
+                                .document(albumId)
+                                .set(album)
+                                .addOnSuccessListener(aVoid -> {
+                                    Log.d(TAG, "Photo added to album: " + albumId);
+                                    listener.onSuccess();
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e(TAG, "Error adding photo to album", e);
+                                    listener.onFailure("Failed to add photo to album");
+                                });
+                        } else {
+                            listener.onFailure("Album not found");
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Error getting album", e);
+                        listener.onFailure("Failed to get album");
+                    });
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Log.e(TAG, "Failed to upload photo: " + error);
+                listener.onFailure("Failed to upload photo");
+            }
+        });
     }
 
     public void removePhotoFromAlbum(String albumId, String photoPath) {
@@ -179,5 +248,39 @@ public class AlbumController {
     public Bitmap getAlbumPhoto(String photoPath) {
         if (photoPath == null) return null;
         return BitmapFactory.decodeFile(photoPath);
+    }
+
+    private void uploadImage(Bitmap bitmap, String path, OnImageUploadedListener listener) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
+        byte[] data = baos.toByteArray();
+
+        StorageReference imageRef = storageRef.child(path);
+        UploadTask uploadTask = imageRef.putBytes(data);
+
+        uploadTask.addOnSuccessListener(taskSnapshot -> {
+            imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                Log.d(TAG, "Image uploaded successfully: " + uri.toString());
+                listener.onSuccess(uri.toString());
+            });
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Error uploading image", e);
+            listener.onFailure(e.getMessage());
+        });
+    }
+
+    public interface OnAlbumCreatedListener {
+        void onSuccess(Album album);
+        void onFailure(String error);
+    }
+
+    public interface OnPhotoAddedListener {
+        void onSuccess();
+        void onFailure(String error);
+    }
+
+    private interface OnImageUploadedListener {
+        void onSuccess(String imageUrl);
+        void onFailure(String error);
     }
 } 

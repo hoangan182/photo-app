@@ -9,11 +9,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ListView;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
@@ -25,66 +26,39 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.photobooth.R;
-import com.example.photobooth.adapter.PhotoGroupAdapter;
+import com.example.photobooth.adapter.FirestoreImageAdapter;
 import com.example.photobooth.controllers.ImagePickerController;
 import com.example.photobooth.controllers.ImageStorageController;
 import com.example.photobooth.controllers.TrashController;
 import com.example.photobooth.controllers.FavoriteController;
 import com.example.photobooth.controllers.AlbumController;
-import com.example.photobooth.models.PhotoItem;
+import com.example.photobooth.models.Image;
 import com.example.photobooth.models.Album;
+import com.example.photobooth.services.FirestoreImageService;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.example.photobooth.services.ImageUploadService;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AllPhotoActivity extends AppCompatActivity implements ImagePickerController.ImagePickerCallback, PhotoGroupAdapter.OnPhotoSelectionListener {
+public class AllPhotoActivity extends AppCompatActivity implements ImagePickerController.ImagePickerCallback {
 
-    private List<PhotoItem> photos;
+    private static final String TAG = "AllPhotoActivity";
+    private List<Image> images;
     private ImagePickerController imagePickerController;
     private ImageStorageController imageStorageController;
     private TrashController trashController;
     private FavoriteController favoriteController;
     private AlbumController albumController;
-    private PhotoGroupAdapter photoAdapter;
+    private FirestoreImageAdapter imageAdapter;
+    private FirestoreImageService imageService;
     private android.view.ActionMode actionMode;
     private View topBarLayout;
+    private ProgressBar progressBar;
+    private AlertDialog loadingDialog;
 
-    private final android.view.ActionMode.Callback actionModeCallback = new android.view.ActionMode.Callback() {
-        @Override
-        public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
-            mode.getMenuInflater().inflate(R.menu.menu_photo_selection, menu);
-            toggleTopBar(false);
-            return true;
-        }
-
-        @Override
-        public boolean onPrepareActionMode(android.view.ActionMode mode, Menu menu) {
-            return false;
-        }
-
-        @Override
-        public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
-            if (item.getItemId() == R.id.action_delete) {
-                showDeleteConfirmationDialog();
-                return true;
-            } else if (item.getItemId() == R.id.action_add_to_album) {
-                showCreateAlbumDialog();
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public void onDestroyActionMode(android.view.ActionMode mode) {
-            photoAdapter.setMultiSelect(false);
-            actionMode = null;
-            toggleTopBar(true);
-        }
-    };
-
-    private ListView listViewAll;
+    private GridView gridView;
     private ImageView imgShowOption;
     private ConstraintLayout noAllImageLayout;
     private TextView txtBackAllPhoto;
@@ -101,35 +75,37 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
         });
 
         // Initialize collections
-        photos = new ArrayList<>();
+        images = new ArrayList<>();
 
         // Initialize views
         initializeViews();
 
-        // Initialize controllers
+        // Initialize controllers and services
         imagePickerController = new ImagePickerController(this, this);
         imageStorageController = new ImageStorageController(this);
         trashController = new TrashController(this);
         favoriteController = new FavoriteController(this);
         albumController = new AlbumController(this);
+        imageService = new FirestoreImageService();
 
         // Set click listeners
         setupClickListeners();
 
-        // Load existing images
-        loadImagesFromStorage();
+        // Load images from Firestore
+        loadImagesFromFirestore();
     }
 
     private void initializeViews() {
-        listViewAll = findViewById(R.id.listViewAll);
+        gridView = findViewById(R.id.gridView);
         noAllImageLayout = findViewById(R.id.noAllImageLayout);
         imgShowOption = findViewById(R.id.imgShowOptionAllPhoto);
         txtBackAllPhoto = findViewById(R.id.txtBackAllPhoto);
         topBarLayout = findViewById(R.id.topBarLayout);
+        progressBar = findViewById(R.id.progressBar);
 
         // Set initial visibility
-        if (listViewAll != null) {
-            listViewAll.setVisibility(View.VISIBLE);
+        if (gridView != null) {
+            gridView.setVisibility(View.VISIBLE);
         }
         if (noAllImageLayout != null) {
             noAllImageLayout.setVisibility(View.GONE);
@@ -146,63 +122,84 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
         }
     }
 
-    private void loadImagesFromStorage() {
-        try {
-            Log.d("AllPhotoActivity", "Loading images from storage");
-            List<PhotoItem> allPhotos = imageStorageController.loadImages();
-            List<String> trashPaths = trashController.getTrashImagePaths();
-            
-            // Filter out photos that are in trash
-            photos = new ArrayList<>();
-            for (PhotoItem photo : allPhotos) {
-                if (!trashPaths.contains(photo.getPath())) {
-                    photos.add(photo);
-                }
+    private void loadImagesFromFirestore() {
+        Log.d(TAG, "Loading images from Firestore");
+        showLoading(true);
+        
+        imageService.getImages(new FirestoreImageService.ImageCallback() {
+            @Override
+            public void onSuccess(List<Image> loadedImages) {
+                Log.d(TAG, "Successfully loaded " + loadedImages.size() + " images");
+                images.clear();
+                images.addAll(loadedImages);
+                runOnUiThread(() -> {
+                    updateGridView();
+                    showLoading(false);
+                });
             }
-            
-            Log.d("AllPhotoActivity", "Loaded " + photos.size() + " images (filtered from " + allPhotos.size() + " total)");
-            // Update UI on the main thread
-            runOnUiThread(this::updateListView);
-        } catch (Exception e) {
-            Log.e("AllPhotoActivity", "Error loading images", e);
-            Toast.makeText(this, "Error loading images", Toast.LENGTH_SHORT).show();
-        }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error loading images: " + error);
+                runOnUiThread(() -> {
+                    showError(error);
+                    showLoading(false);
+                });
+            }
+        });
     }
 
-    private void updateListView() {
-        if (listViewAll == null || noAllImageLayout == null) {
-            Log.e("AllPhotoActivity", "Views not initialized");
+    private void updateGridView() {
+        if (gridView == null || noAllImageLayout == null) {
+            Log.e(TAG, "Views not initialized");
             return;
         }
 
         try {
-            Log.d("AllPhotoActivity", "Updating ListView with " + photos.size() + " photos");
-            if (photos.isEmpty()) {
-                Log.d("AllPhotoActivity", "No photos to display");
+            Log.d(TAG, "Updating GridView with " + images.size() + " images");
+            if (images.isEmpty()) {
+                Log.d(TAG, "No images to display");
                 noAllImageLayout.setVisibility(View.VISIBLE);
-                listViewAll.setVisibility(View.GONE);
+                gridView.setVisibility(View.GONE);
             } else {
-                Log.d("AllPhotoActivity", "Displaying photos");
+                Log.d(TAG, "Displaying images");
                 noAllImageLayout.setVisibility(View.GONE);
-                listViewAll.setVisibility(View.VISIBLE);
-                if (photoAdapter == null) {
-                    Log.d("AllPhotoActivity", "Creating new PhotoGroupAdapter");
-                    photoAdapter = new PhotoGroupAdapter(this, photos);
-                    photoAdapter.setOnPhotoSelectionListener(this);
-                    listViewAll.setAdapter(photoAdapter);
-                } else {
-                    Log.d("AllPhotoActivity", "Updating existing PhotoGroupAdapter");
-                    photoAdapter.updatePhotos(photos);
-                }
+                gridView.setVisibility(View.VISIBLE);
+                
+                // Create new adapter
+                imageAdapter = new FirestoreImageAdapter(this, images);
+                gridView.setAdapter(imageAdapter);
+                
                 // Force refresh
-                photoAdapter.notifyDataSetChanged();
-                listViewAll.invalidateViews();
-                listViewAll.requestLayout();
+                gridView.invalidateViews();
+                gridView.requestLayout();
             }
         } catch (Exception e) {
-            Log.e("AllPhotoActivity", "Error updating list view", e);
+            Log.e(TAG, "Error updating grid view", e);
             Toast.makeText(this, "Error updating display", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void showLoading(boolean isLoading) {
+        if (progressBar != null) {
+            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        }
+        if (gridView != null) {
+            gridView.setVisibility(isLoading ? View.GONE : View.VISIBLE);
+        }
+        if (noAllImageLayout != null) {
+            noAllImageLayout.setVisibility(View.GONE);
+        }
+    }
+
+    private void showError(String error) {
+        if (noAllImageLayout != null) {
+            noAllImageLayout.setVisibility(View.VISIBLE);
+        }
+        if (gridView != null) {
+            gridView.setVisibility(View.GONE);
+        }
+        Toast.makeText(this, error, Toast.LENGTH_LONG).show();
     }
 
     private void showAddOptions() {
@@ -224,11 +221,8 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
 
         createFolder.setOnClickListener(v -> {
             bottomSheetDialog.dismiss();
-            if (photoAdapter != null) {
-                photoAdapter.setMultiSelect(true);
-                actionMode = startActionMode(actionModeCallback);
-                Toast.makeText(this, "Chọn ảnh để tạo album mới", Toast.LENGTH_SHORT).show();
-            }
+            // TODO: Implement album creation with Firestore images
+            Toast.makeText(this, "Album creation not implemented yet", Toast.LENGTH_SHORT).show();
         });
 
         bottomSheetDialog.show();
@@ -236,14 +230,7 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
 
     @Override
     public void onImagePicked(Uri imageUri) {
-        try {
-            String savedImagePath = imageStorageController.saveImage(imageUri);
-            loadImagesFromStorage(); // Reload all photos to update the view
-            Toast.makeText(this, "Image saved successfully", Toast.LENGTH_SHORT).show();
-        } catch (IOException e) {
-            Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
-        }
+        handleImageSelection(imageUri);
     }
 
     @Override
@@ -251,164 +238,57 @@ public class AllPhotoActivity extends AppCompatActivity implements ImagePickerCo
         Toast.makeText(this, "Permission denied to access gallery", Toast.LENGTH_SHORT).show();
     }
 
-    @Override
-    public void onPhotoSelected(PhotoItem photo, boolean isSelected) {
-        if (actionMode != null) {
-            // Update action mode title
-            int count = photoAdapter.getSelectedItems().size();
-            actionMode.setTitle(count + " selected");
-        } else if (isSelected) {
-            // Start action mode when first photo is selected
-            actionMode = startActionMode(actionModeCallback);
-        }
-    }
+    private void handleImageSelection(Uri imageUri) {
+        // Show loading dialog
+        loadingDialog = new AlertDialog.Builder(this)
+            .setMessage("Đang tải ảnh lên...")
+            .setCancelable(false)
+            .create();
+        loadingDialog.show();
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Log.d("AllPhotoActivity", "onActivityResult called - requestCode: " + requestCode + ", resultCode: " + resultCode);
-        
-        if (resultCode == RESULT_OK) {
-            if (requestCode == 2) {
-                // Handle edited image
-                String editedImagePath = data.getStringExtra("editedImagePath");
-                Log.d("AllPhotoActivity", "Received edited image path: " + editedImagePath);
-                
-                if (editedImagePath != null) {
-                    // Update UI on the main thread
-                    runOnUiThread(this::loadImagesFromStorage);
-                }
-            } else {
-                // Handle deleted image
-                String deletedPhotoPath = data.getStringExtra("deleted_photo_path");
-                if (deletedPhotoPath != null) {
-                    Log.d("AllPhotoActivity", "Photo was deleted: " + deletedPhotoPath);
-                    // Remove the deleted photo from the current list immediately
-                    photos.removeIf(photo -> photo.getPath().equals(deletedPhotoPath));
-                    // Update UI immediately
-                    runOnUiThread(() -> {
-                        if (photoAdapter != null) {
-                            photoAdapter.updatePhotos(photos);
-                            photoAdapter.notifyDataSetChanged();
-                        }
-                        if (listViewAll != null) {
-                            listViewAll.invalidateViews();
-                            listViewAll.requestLayout();
-                        }
-                        // Then reload from storage to ensure consistency
-                        loadImagesFromStorage();
-                    });
-                }
+        imageStorageController.saveImage(imageUri, new ImageUploadService.UploadCallback() {
+            @Override
+            public void onSuccess(String imageUrl) {
+                runOnUiThread(() -> {
+                    hideLoading();
+                    showToast("Upload successful");
+                    refreshImages();
+                });
             }
-        }
-    }
 
-    private void showDeleteConfirmationDialog() {
-        List<PhotoItem> selectedPhotos = photoAdapter.getSelectedItems();
-        if (selectedPhotos.isEmpty()) {
-            return;
-        }
-
-        new AlertDialog.Builder(this)
-                .setTitle("Xóa ảnh")
-                .setMessage("Bạn có chắc chắn muốn xóa " + selectedPhotos.size() + " ảnh đã chọn?")
-                .setPositiveButton("Xóa", (dialog, which) -> deleteSelectedPhotos(selectedPhotos))
-                .setNegativeButton("Hủy", null)
-                .show();
-    }
-
-    private void deleteSelectedPhotos(List<PhotoItem> selectedPhotos) {
-        for (PhotoItem photo : selectedPhotos) {
-            // Move to trash
-            trashController.addToTrash(photo.getPath());
-            // Remove from favorites if it's a favorite
-            if (favoriteController.isFavorite(photo.getPath())) {
-                favoriteController.removeFavorite(photo.getPath());
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    hideLoading();
+                    showToast("Upload failed: " + error);
+                });
             }
-            // Remove from albums if it's in any album
-            List<Album> albums = albumController.getAllAlbums();
-            for (Album album : albums) {
-                if (album.getPhotoPaths().contains(photo.getPath())) {
-                    albumController.removePhotoFromAlbum(album.getId(), photo.getPath());
-                }
-            }
-        }
-        
-        // Reload photos
-        loadImagesFromStorage();
-        
-        // Finish action mode
-        if (actionMode != null) {
-            actionMode.finish();
-        }
-        
-        Toast.makeText(this, "Đã xóa " + selectedPhotos.size() + " ảnh", Toast.LENGTH_SHORT).show();
-    }
 
-    private void showCreateAlbumDialog() {
-        List<PhotoItem> selectedPhotos = photoAdapter.getSelectedItems();
-        if (selectedPhotos.isEmpty()) {
-            return;
-        }
-
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_album_name, null);
-        EditText editText = dialogView.findViewById(R.id.editAlbumName);
-
-        new AlertDialog.Builder(this)
-                .setTitle("Tạo album mới")
-                .setView(dialogView)
-                .setPositiveButton("Tạo", (dialog, which) -> {
-                    String albumName = editText.getText().toString().trim();
-                    if (!albumName.isEmpty()) {
-                        createNewAlbum(albumName, selectedPhotos);
-                    } else {
-                        Toast.makeText(this, "Vui lòng nhập tên album", Toast.LENGTH_SHORT).show();
+            @Override
+            public void onProgress(int progress) {
+                runOnUiThread(() -> {
+                    if (progressBar != null) {
+                        progressBar.setProgress(progress);
                     }
-                })
-                .setNegativeButton("Hủy", null)
-                .show();
-    }
-
-    private void createNewAlbum(String albumName, List<PhotoItem> selectedPhotos) {
-        if (selectedPhotos.isEmpty()) {
-            return;
-        }
-
-        // Get first photo as cover
-        PhotoItem firstPhoto = selectedPhotos.get(0);
-        Bitmap coverBitmap = BitmapFactory.decodeFile(firstPhoto.getPath());
-        
-        // Create new album with cover image
-        Album album = albumController.createAlbum(albumName, "", coverBitmap);
-        
-        // Add all selected photos to album
-        for (PhotoItem photo : selectedPhotos) {
-            Bitmap bitmap = BitmapFactory.decodeFile(photo.getPath());
-            if (bitmap != null) {
-                albumController.addPhotoToAlbum(album.getId(), bitmap);
+                });
             }
-        }
-        
-        // Finish action mode
-        if (actionMode != null) {
-            actionMode.finish();
-        }
-        
-        Toast.makeText(this, "Đã tạo album " + albumName + " với " + selectedPhotos.size() + " ảnh", Toast.LENGTH_SHORT).show();
+        });
     }
 
-    private void toggleTopBar(boolean show) {
-        if (topBarLayout != null) {
-            topBarLayout.setVisibility(show ? View.VISIBLE : View.GONE);
+    private void hideLoading() {
+        if (loadingDialog != null && loadingDialog.isShowing()) {
+            loadingDialog.dismiss();
+        }
+        if (progressBar != null) {
+            progressBar.setVisibility(View.GONE);
         }
     }
 
-    @Override
-    public void onPhotoLongClick(PhotoItem photo) {
-        if (actionMode == null) {
-            photoAdapter.setMultiSelect(true);
-            actionMode = startActionMode(actionModeCallback);
-            toggleTopBar(false);
-        }
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void refreshImages() {
+        loadImagesFromFirestore();
     }
 }

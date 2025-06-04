@@ -7,6 +7,8 @@ import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -15,13 +17,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.example.photobooth.R;
 import com.example.photobooth.controllers.ImageStorageController;
+import com.example.photobooth.services.ImageUploadService;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -42,6 +49,7 @@ public class ImageEditActivity extends AppCompatActivity {
     private float brightness = 0f;
     private float contrast = 1f;
     private float saturation = 1f;
+    private ImageUploadService imageUploadService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +64,7 @@ public class ImageEditActivity extends AppCompatActivity {
 
         // Initialize controllers
         imageStorageController = new ImageStorageController(this);
+        imageUploadService = new ImageUploadService(this);
 
         // Initialize views
         initializeViews();
@@ -87,13 +96,24 @@ public class ImageEditActivity extends AppCompatActivity {
 
     private void loadImage() {
         try {
-            originalBitmap = BitmapFactory.decodeFile(imagePath);
-            if (originalBitmap != null) {
-                editedBitmap = originalBitmap.copy(originalBitmap.getConfig(), true);
-                imageView.setImageBitmap(editedBitmap);
-            } else {
-                throw new Exception("Failed to load image");
-            }
+            // Load image from URL using Glide
+            Glide.with(this)
+                .asBitmap()
+                .load(imagePath)
+                .into(new CustomTarget<Bitmap>() {
+                    @Override
+                    public void onResourceReady(Bitmap bitmap, Transition<? super Bitmap> transition) {
+                        originalBitmap = bitmap;
+                        editedBitmap = originalBitmap.copy(originalBitmap.getConfig(), true);
+                        imageView.setImageBitmap(editedBitmap);
+                    }
+
+                    @Override
+                    public void onLoadCleared(@Nullable Drawable placeholder) {
+                        Toast.makeText(ImageEditActivity.this, "Error loading image", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
+                });
         } catch (Exception e) {
             Toast.makeText(this, "Error loading image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             finish();
@@ -198,22 +218,48 @@ public class ImageEditActivity extends AppCompatActivity {
     }
 
     private void saveEditedImage() {
-        // Save the edited image
-        String editedImagePath = imageStorageController.saveEditedImage(editedBitmap);
-        if (editedImagePath != null) {
-            // Pass the edited image path back to AllPhotoActivity
-            Intent resultIntent = new Intent();
-            resultIntent.putExtra("editedImagePath", editedImagePath);
-            setResult(RESULT_OK, resultIntent);
-            Toast.makeText(this, "Image saved successfully", Toast.LENGTH_SHORT).show();
-            
-            // Finish both activities to return to AllPhotoActivity
-            Intent intent = new Intent(this, AllPhotoActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            finish();
-        } else {
-            Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show();
+        try {
+            // Create a temporary file to store the edited bitmap
+            File tempFile = File.createTempFile("edited_", ".jpg", getCacheDir());
+            FileOutputStream out = new FileOutputStream(tempFile);
+            editedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            out.flush();
+            out.close();
+
+            // Upload the edited image
+            Uri imageUri = Uri.fromFile(tempFile);
+            imageUploadService.uploadImage(imageUri, "image/jpeg", new ImageUploadService.UploadCallback() {
+                @Override
+                public void onSuccess(String imageUrl) {
+                    runOnUiThread(() -> {
+                        // Pass the edited image URL back to ImageDetailActivity
+                        Intent resultIntent = new Intent();
+                        resultIntent.putExtra("editedImageUrl", imageUrl);
+                        setResult(RESULT_OK, resultIntent);
+                        Toast.makeText(ImageEditActivity.this, "Image saved successfully", Toast.LENGTH_SHORT).show();
+                        
+                        // Navigate to main activity and clear all previous activities
+                        Intent mainIntent = new Intent(ImageEditActivity.this, MainActivity.class);
+                        mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(mainIntent);
+                        finish();
+                    });
+                }
+
+                @Override
+                public void onError(String error) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(ImageEditActivity.this, "Failed to save image: " + error, Toast.LENGTH_SHORT).show();
+                    });
+                }
+
+                @Override
+                public void onProgress(int progress) {
+                    // Show progress if needed
+                }
+            });
+        } catch (IOException e) {
+            Toast.makeText(this, "Failed to save image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 

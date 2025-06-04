@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -184,25 +185,58 @@ public class AddAlbumActivity extends AppCompatActivity implements ImagePickerCo
         String albumName = albumNameEditText.getText().toString().trim();
         
         if (albumName.isEmpty()) {
-            Toast.makeText(this, "Please enter album name", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Vui lòng nhập tên album", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (selectedImages.isEmpty()) {
-            Toast.makeText(this, "Please select at least one image", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Vui lòng chọn ít nhất một ảnh", Toast.LENGTH_SHORT).show();
             return;
         }
 
         // Create album with first image as cover
-        Album album = albumController.createAlbum(albumName, "", selectedCoverImage);
-        
-        // Save all selected images to album
-        for (Bitmap image : selectedImages) {
-            albumController.addPhotoToAlbum(album.getId(), image);
-        }
-        
-        Toast.makeText(this, "Album created successfully", Toast.LENGTH_SHORT).show();
-        finish();
+        albumController.createAlbum(albumName, "", selectedCoverImage, new AlbumController.OnAlbumCreatedListener() {
+            @Override
+            public void onSuccess(Album album) {
+                // Save all selected images to album
+                int[] successCount = {0};
+                int totalImages = selectedImages.size();
+                
+                for (Bitmap image : selectedImages) {
+                    albumController.addPhotoToAlbum(album.getId(), image, new AlbumController.OnPhotoAddedListener() {
+                        @Override
+                        public void onSuccess() {
+                            successCount[0]++;
+                            if (successCount[0] == totalImages) {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(AddAlbumActivity.this, "Đã tạo album thành công", Toast.LENGTH_SHORT).show();
+                                    finish();
+                                });
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Log.e("AddAlbumActivity", "Failed to add photo: " + error);
+                            successCount[0]++;
+                            if (successCount[0] == totalImages) {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(AddAlbumActivity.this, "Đã tạo album nhưng một số ảnh không thể thêm vào", Toast.LENGTH_SHORT).show();
+                                    finish();
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(String error) {
+                runOnUiThread(() -> {
+                    Toast.makeText(AddAlbumActivity.this, "Không thể tạo album: " + error, Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 
     @Override

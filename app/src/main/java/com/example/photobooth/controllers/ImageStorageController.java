@@ -10,6 +10,7 @@ import android.util.Log;
 import android.database.Cursor;
 
 import com.example.photobooth.models.PhotoItem;
+import com.example.photobooth.services.ImageUploadService;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,6 +27,7 @@ public class ImageStorageController {
     private static final int MAX_IMAGE_DIMENSION = 2048;
     private final Context context;
     private final File storageDir;
+    private final ImageUploadService imageUploadService;
 
     public ImageStorageController(Context context) {
         this.context = context;
@@ -34,6 +36,7 @@ public class ImageStorageController {
         if (!storageDir.exists()) {
             storageDir.mkdirs();
         }
+        this.imageUploadService = new ImageUploadService(context);
     }
 
     public File getStorageDir() {
@@ -84,99 +87,14 @@ public class ImageStorageController {
                lowerCaseName.endsWith(".png") || lowerCaseName.endsWith(".gif");
     }
 
-    public String saveImage(Uri imageUri) throws IOException {
-        InputStream inputStream = context.getContentResolver().openInputStream(imageUri);
-        if (inputStream == null) {
-            throw new IOException("Could not open input stream for image");
-        }
-
-        // Get image capture date from EXIF data
-        long captureDate = getImageCaptureDate(imageUri);
-        
-        // Check if this is a camera photo or downloaded image
-        boolean isCameraPhoto = false;
-        if ("content".equals(imageUri.getScheme())) {
-            String[] projection = {MediaStore.Images.Media.DATA, MediaStore.Images.Media.DATE_ADDED};
-            try (Cursor cursor = context.getContentResolver().query(imageUri, projection, null, null, null)) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    int dataColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
-                    int dateAddedColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATE_ADDED);
-                    
-                    if (dataColumn != -1) {
-                        String path = cursor.getString(dataColumn);
-                        // Check if the image is from camera directory
-                        isCameraPhoto = path != null && path.contains("/DCIM/Camera/");
-                    }
-                    
-                    // For non-camera photos, use DATE_ADDED if available
-                    if (!isCameraPhoto && dateAddedColumn != -1) {
-                        long dateAdded = cursor.getLong(dateAddedColumn) * 1000; // Convert seconds to milliseconds
-                        captureDate = dateAdded;
-                    }
-                }
-            }
-        }
-
-        // For downloaded images, use current time if no other date is available
-        if (!isCameraPhoto && captureDate == 0) {
-            captureDate = System.currentTimeMillis();
-        }
-
-        // Create a unique filename
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date(captureDate));
-        String imageFileName = "IMG_" + timeStamp + ".jpg";
-        File imageFile = new File(storageDir, imageFileName);
-
-        // Save the image with EXIF data
-        try (FileOutputStream outputStream = new FileOutputStream(imageFile)) {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
-        } finally {
-            inputStream.close();
-        }
-
-        // Copy EXIF data to the saved file
+    public void saveImage(Uri imageUri, ImageUploadService.UploadCallback callback) {
         try {
-            ExifInterface sourceExif = new ExifInterface(context.getContentResolver().openInputStream(imageUri));
-            ExifInterface destExif = new ExifInterface(imageFile.getAbsolutePath());
-            
-            // Copy all EXIF attributes
-            for (String tag : new String[]{
-                ExifInterface.TAG_DATETIME_ORIGINAL,
-                ExifInterface.TAG_DATETIME,
-                ExifInterface.TAG_MAKE,
-                ExifInterface.TAG_MODEL,
-                ExifInterface.TAG_EXPOSURE_TIME,
-                ExifInterface.TAG_F_NUMBER,
-                ExifInterface.TAG_ISO_SPEED_RATINGS,
-                ExifInterface.TAG_FOCAL_LENGTH,
-                ExifInterface.TAG_GPS_LATITUDE,
-                ExifInterface.TAG_GPS_LONGITUDE,
-                ExifInterface.TAG_GPS_ALTITUDE
-            }) {
-                String value = sourceExif.getAttribute(tag);
-                if (value != null) {
-                    destExif.setAttribute(tag, value);
-                }
-            }
-
-            // For downloaded images, set the download time as capture date
-            if (!isCameraPhoto) {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault());
-                String dateStr = sdf.format(new Date(captureDate));
-                destExif.setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, dateStr);
-                destExif.setAttribute(ExifInterface.TAG_DATETIME, dateStr);
-            }
-
-            destExif.saveAttributes();
+            String mimeType = context.getContentResolver().getType(imageUri);
+            imageUploadService.uploadImage(imageUri, mimeType, callback);
         } catch (Exception e) {
-            Log.e(TAG, "Error copying EXIF data", e);
+            Log.e(TAG, "Error saving image", e);
+            callback.onError("Error saving image: " + e.getMessage());
         }
-
-        return imageFile.getAbsolutePath();
     }
 
     private long getImageCaptureDate(Uri imageUri) {

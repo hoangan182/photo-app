@@ -34,79 +34,171 @@ public class TrashController {
             return new ArrayList<>();
         }
         Type type = new TypeToken<List<String>>() {}.getType();
-        return gson.fromJson(json, type);
+        List<String> paths = gson.fromJson(json, type);
+        // Filter out any null or empty paths
+        paths.removeIf(path -> path == null || path.isEmpty());
+        return paths;
     }
 
-    public void addToTrash(String imagePath) {
-        List<String> trashImages = getTrashImagePaths();
-        if (!trashImages.contains(imagePath)) {
-            trashImages.add(imagePath);
-            saveTrashImages(trashImages);
+    public boolean addToTrash(String imagePath) {
+        try {
+            if (imagePath == null || imagePath.isEmpty()) {
+                Log.e(TAG, "Invalid image path");
+                return false;
+            }
+
+            List<String> trashImages = getTrashImagePaths();
+            if (!trashImages.contains(imagePath)) {
+                trashImages.add(imagePath);
+                saveTrashImages(trashImages);
+                Log.d(TAG, "Added to trash: " + imagePath);
+                return true;
+            }
+            return true; // Already in trash
+        } catch (Exception e) {
+            Log.e(TAG, "Error adding to trash: " + e.getMessage());
+            return false;
         }
     }
 
-    public void removeFromTrash(String imagePath) {
-        List<String> trashImages = getTrashImagePaths();
-        trashImages.remove(imagePath);
-        saveTrashImages(trashImages);
+    public boolean removeFromTrash(String imagePath) {
+        try {
+            if (imagePath == null || imagePath.isEmpty()) {
+                Log.e(TAG, "Invalid image path");
+                return false;
+            }
+
+            List<String> trashImages = getTrashImagePaths();
+            boolean removed = trashImages.remove(imagePath);
+            if (removed) {
+                saveTrashImages(trashImages);
+                Log.d(TAG, "Removed from trash: " + imagePath);
+            }
+            return removed;
+        } catch (Exception e) {
+            Log.e(TAG, "Error removing from trash: " + e.getMessage());
+            return false;
+        }
     }
 
     public void clearTrash() {
-        saveTrashImages(new ArrayList<>());
+        try {
+            saveTrashImages(new ArrayList<>());
+            Log.d(TAG, "Trash cleared");
+        } catch (Exception e) {
+            Log.e(TAG, "Error clearing trash: " + e.getMessage());
+        }
     }
 
     private void saveTrashImages(List<String> trashImages) {
-        String json = gson.toJson(trashImages);
-        preferences.edit().putString(KEY_TRASH_IMAGES, json).apply();
+        try {
+            String json = gson.toJson(trashImages);
+            preferences.edit()
+                .putString(KEY_TRASH_IMAGES, json)
+                .apply();
+            Log.d(TAG, "Saved trash images: " + trashImages.size());
+        } catch (Exception e) {
+            Log.e(TAG, "Error saving trash images: " + e.getMessage());
+        }
     }
 
-    public boolean restoreImage(String imagePath) {
-        File imageFile = new File(imagePath);
-        if (!imageFile.exists()) {
-            Log.e(TAG, "Image file does not exist: " + imagePath);
+    public boolean isInTrash(String imagePath) {
+        if (imagePath == null || imagePath.isEmpty()) {
             return false;
         }
-
-        // Remove from trash list
-        removeFromTrash(imagePath);
-        return true;
+        return getTrashImagePaths().contains(imagePath);
     }
 
     public boolean permanentlyDeleteImage(String imagePath) {
-        File imageFile = new File(imagePath);
-        if (!imageFile.exists()) {
-            Log.e(TAG, "Image file does not exist: " + imagePath);
+        try {
+            if (imagePath == null || imagePath.isEmpty()) {
+                Log.e(TAG, "Invalid image path");
+                return false;
+            }
+
+            // Remove from trash list first
+            boolean removed = removeFromTrash(imagePath);
+            if (!removed) {
+                Log.e(TAG, "Failed to remove from trash list: " + imagePath);
+                return false;
+            }
+
+            // Try to delete the file if it exists
+            File imageFile = new File(imagePath);
+            if (imageFile.exists()) {
+                boolean deleted = imageFile.delete();
+                if (!deleted) {
+                    Log.e(TAG, "Failed to delete file: " + imagePath);
+                    return false;
+                }
+            }
+
+            Log.d(TAG, "Permanently deleted: " + imagePath);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Error permanently deleting image: " + e.getMessage());
             return false;
-        }
-
-        // Delete the file
-        boolean deleted = imageFile.delete();
-        if (deleted) {
-            // Remove from trash list
-            removeFromTrash(imagePath);
-        }
-        return deleted;
-    }
-
-    public void restoreAllImages() {
-        List<String> trashImages = getTrashImagePaths();
-        for (String imagePath : trashImages) {
-            restoreImage(imagePath);
-        }
-    }
-
-    public void deleteAllImages() {
-        List<String> trashImages = getTrashImagePaths();
-        for (String imagePath : trashImages) {
-            permanentlyDeleteImage(imagePath);
         }
     }
 
     public Bitmap getTrashImage(String imagePath) {
-        File imageFile = new File(imagePath);
-        if (!imageFile.exists()) {
+        try {
+            if (imagePath == null || imagePath.isEmpty()) {
+                return null;
+            }
+
+            File imageFile = new File(imagePath);
+            if (!imageFile.exists()) {
+                Log.e(TAG, "Image file does not exist: " + imagePath);
+                return null;
+            }
+            return BitmapFactory.decodeFile(imagePath);
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting trash image: " + e.getMessage());
             return null;
         }
-        return BitmapFactory.decodeFile(imagePath);
+    }
+
+    public boolean restoreImage(String imagePath) {
+        try {
+            if (imagePath == null || imagePath.isEmpty()) {
+                Log.e(TAG, "Invalid image path");
+                return false;
+            }
+
+            // Remove from trash list
+            boolean removed = removeFromTrash(imagePath);
+            if (removed) {
+                Log.d(TAG, "Restored image: " + imagePath);
+            }
+            return removed;
+        } catch (Exception e) {
+            Log.e(TAG, "Error restoring image: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public void restoreAllImages() {
+        try {
+            List<String> trashImages = getTrashImagePaths();
+            for (String imagePath : trashImages) {
+                restoreImage(imagePath);
+            }
+            Log.d(TAG, "Restored all images from trash");
+        } catch (Exception e) {
+            Log.e(TAG, "Error restoring all images: " + e.getMessage());
+        }
+    }
+
+    public void deleteAllImages() {
+        try {
+            List<String> trashImages = getTrashImagePaths();
+            for (String imagePath : trashImages) {
+                permanentlyDeleteImage(imagePath);
+            }
+            Log.d(TAG, "Deleted all images from trash");
+        } catch (Exception e) {
+            Log.e(TAG, "Error deleting all images: " + e.getMessage());
+        }
     }
 } 

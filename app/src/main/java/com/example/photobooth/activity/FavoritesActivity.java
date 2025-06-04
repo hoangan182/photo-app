@@ -5,13 +5,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.GridView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.photobooth.R;
-import com.example.photobooth.adapter.ImageAdapter;
+import com.example.photobooth.adapter.PhotoGroupAdapter;
 import com.example.photobooth.models.PhotoItem;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -19,20 +19,21 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FavoriteActivity extends AppCompatActivity {
-    private static final String TAG = "FavoriteActivity";
+public class FavoritesActivity extends AppCompatActivity {
+    private static final String TAG = "FavoritesActivity";
 
     private GridView gridViewFavorites;
-    private ConstraintLayout noFavoriteImageLayout;
+    private ProgressBar progressBar;
+    private TextView emptyView;
     private TextView txtBack;
     private FirebaseFirestore db;
-    private ImageAdapter imageAdapter;
+    private PhotoGroupAdapter photoAdapter;
     private List<PhotoItem> favoritePhotos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_favorite);
+        setContentView(R.layout.activity_favorites);
 
         // Initialize Firestore
         db = FirebaseFirestore.getInstance();
@@ -46,7 +47,8 @@ public class FavoriteActivity extends AppCompatActivity {
 
     private void initializeViews() {
         gridViewFavorites = findViewById(R.id.gridViewFavorites);
-        noFavoriteImageLayout = findViewById(R.id.noFavoriteImageLayout);
+        progressBar = findViewById(R.id.progressBar);
+        emptyView = findViewById(R.id.emptyView);
         txtBack = findViewById(R.id.txtBack);
         favoritePhotos = new ArrayList<>();
 
@@ -54,8 +56,8 @@ public class FavoriteActivity extends AppCompatActivity {
         txtBack.setOnClickListener(v -> finish());
 
         // Set up adapter
-        imageAdapter = new ImageAdapter(this, favoritePhotos);
-        gridViewFavorites.setAdapter(imageAdapter);
+        photoAdapter = new PhotoGroupAdapter(this, favoritePhotos);
+        gridViewFavorites.setAdapter(photoAdapter);
 
         // Set item click listener
         gridViewFavorites.setOnItemClickListener((parent, view, position, id) -> {
@@ -67,6 +69,9 @@ public class FavoriteActivity extends AppCompatActivity {
     }
 
     private void loadFavoriteImages() {
+        showLoading(true);
+        emptyView.setVisibility(View.GONE);
+
         Log.d(TAG, "Starting to load favorite images from Firestore");
         db.collection("favorites")
             .get()
@@ -102,22 +107,28 @@ public class FavoriteActivity extends AppCompatActivity {
             })
             .addOnFailureListener(e -> {
                 Log.e(TAG, "Error loading favorite images: " + e.getMessage(), e);
-                noFavoriteImageLayout.setVisibility(View.VISIBLE);
-                gridViewFavorites.setVisibility(View.GONE);
+                showLoading(false);
+                emptyView.setVisibility(View.VISIBLE);
+                emptyView.setText("Không thể tải ảnh yêu thích");
             });
     }
 
     private void updateUI() {
+        showLoading(false);
         if (favoritePhotos.isEmpty()) {
-            noFavoriteImageLayout.setVisibility(View.VISIBLE);
+            emptyView.setVisibility(View.VISIBLE);
             gridViewFavorites.setVisibility(View.GONE);
             Log.d(TAG, "No favorite images found, showing empty view");
         } else {
-            noFavoriteImageLayout.setVisibility(View.GONE);
+            emptyView.setVisibility(View.GONE);
             gridViewFavorites.setVisibility(View.VISIBLE);
-            imageAdapter.notifyDataSetChanged();
+            photoAdapter.notifyDataSetChanged();
             Log.d(TAG, "Found " + favoritePhotos.size() + " favorite images, updating grid view");
         }
+    }
+
+    private void showLoading(boolean isLoading) {
+        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -126,4 +137,4 @@ public class FavoriteActivity extends AppCompatActivity {
         // Reload images when returning to this activity
         loadFavoriteImages();
     }
-}
+} 

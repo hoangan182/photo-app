@@ -39,11 +39,13 @@ public class AllAlbumActivity extends AppCompatActivity {
     private AlbumController albumController;
     private AlbumAdapter adapter;
     private ActionMode actionMode;
+    private View topBarLayout;
 
     private final ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             mode.getMenuInflater().inflate(R.menu.menu_album_selection, menu);
+            toggleTopBar(false);
             return true;
         }
 
@@ -66,6 +68,7 @@ public class AllAlbumActivity extends AppCompatActivity {
         public void onDestroyActionMode(ActionMode mode) {
             adapter.setMultiSelect(false);
             actionMode = null;
+            toggleTopBar(true);
         }
     };
 
@@ -98,6 +101,7 @@ public class AllAlbumActivity extends AppCompatActivity {
         txtBackAllAlbum = findViewById(R.id.txtBackAllAlbum);
         noAlbumImageLayout = findViewById(R.id.noAllImageLayout);
         imgAddAlbum = findViewById(R.id.imgShowOptionAllPhoto);
+        topBarLayout = findViewById(R.id.topBarLayout);
     }
 
     private void setupClickListeners() {
@@ -209,5 +213,11 @@ public class AllAlbumActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadAlbums(); // Reload albums when returning from AddAlbumActivity
+    }
+
+    private void toggleTopBar(boolean show) {
+        if (topBarLayout != null) {
+            topBarLayout.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
     }
 }
